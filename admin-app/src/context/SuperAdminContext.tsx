@@ -85,8 +85,24 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     referralRewardINR: 500,
   });
 
-  const [farmers, setFarmers] = useState<MasterFarmer[]>(INITIAL_MASTER_FARMERS);
-  const [companies, setCompanies] = useState<MasterCompany[]>(INITIAL_MASTER_COMPANIES);
+  const [farmers, setFarmers] = useState<MasterFarmer[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_admin_farmers_master');
+      return saved ? JSON.parse(saved) : INITIAL_MASTER_FARMERS;
+    } catch {
+      return INITIAL_MASTER_FARMERS;
+    }
+  });
+
+  const [companies, setCompanies] = useState<MasterCompany[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_admin_companies_master');
+      return saved ? JSON.parse(saved) : INITIAL_MASTER_COMPANIES;
+    } catch {
+      return INITIAL_MASTER_COMPANIES;
+    }
+  });
+
   const [fieldAgents] = useState<MasterFieldAgent[]>(INITIAL_MASTER_FIELD_AGENTS);
   const [selectedAgent, setSelectedAgent] = useState<MasterFieldAgent | null>(null);
 
@@ -114,53 +130,85 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     Wheat: 24.00,
   });
 
-  // Cross-App Real-Time Sync Listener (BroadcastChannel)
+  // Cross-App Real-Time Sync Listener (BroadcastChannel & localStorage)
   useEffect(() => {
-    if (!('BroadcastChannel' in window)) return;
-    const channel = new BroadcastChannel('kisan_jod_shared_sync');
-
-    channel.onmessage = (event) => {
-      if (event.data && event.data.type === 'NEW_DEMAND_SUBMITTED') {
-        const newDemand = event.data.demand;
-        // Automatically reflect as order/demand in Super-Admin!
-        const newOrder: MasterOrder = {
-          orderId: `ORD-BUY-${Date.now().toString().slice(-3)}`,
-          cropName: newDemand.cropName,
-          quantityRequestedKg: newDemand.quantity,
-          confirmedQtyKg: 0,
-          grade: newDemand.requiredGrade || 'A',
-          pricePerKgINR: newDemand.expectedPricePerUnit || 18,
-          farmerSource: 'Aggregated Local Farmers Pool',
-          fieldAgentId: 'FA-10234',
-          fieldAgentName: 'Gurpreet Singh',
-          inventoryFacility: 'Ludhiana Approved Storage Facility #4',
-          logisticsPartner: 'Sample Fleet Partner',
-          driverName: 'Raj Kumar',
-          driverPhone: '+91 98765 12345',
-          vehicleNumber: 'PB-10-CZ-4921',
-          companyName: 'FreshAgro Foods Pvt Ltd',
-          createdDate: new Date().toISOString().split('T')[0],
-          currentStatus: 'Demand Created',
-          paymentStatus: 'Pending',
-          completionPercent: 10,
-          riskStatus: 'Low Risk',
-          custodyCheckpoints: [],
-          financials: {
-            companyPayment: newDemand.quantity * (newDemand.expectedPricePerUnit || 18),
-            farmerPayment: newDemand.quantity * 16,
-            fieldAgentCost: newDemand.quantity * 0.5,
-            logisticsCost: 4000,
-            storageCost: 1500,
-            qualityHandlingCost: 1000,
-            platformServiceFee: 2500,
-            netMargin: 0,
-          },
-        };
-        setOrders((prev) => [...prev, newOrder].sort((a, b) => a.orderId.localeCompare(b.orderId)));
+    const reloadMasterData = () => {
+      try {
+        const savedFarmers = localStorage.getItem('kisan_admin_farmers_master');
+        if (savedFarmers) setFarmers(JSON.parse(savedFarmers));
+        const savedCompanies = localStorage.getItem('kisan_admin_companies_master');
+        if (savedCompanies) setCompanies(JSON.parse(savedCompanies));
+      } catch (e) {
+        console.warn(e);
       }
     };
 
-    return () => channel.close();
+    const channel1 = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_shared_sync') : null;
+    const channel2 = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_reactive_channel') : null;
+
+    if (channel1) {
+      channel1.onmessage = (event) => {
+        if (event.data && event.data.type === 'NEW_DEMAND_SUBMITTED') {
+          const newDemand = event.data.demand;
+          const newOrder: MasterOrder = {
+            orderId: `ORD-BUY-${Date.now().toString().slice(-3)}`,
+            cropName: newDemand.cropName,
+            quantityRequestedKg: newDemand.quantity,
+            confirmedQtyKg: 0,
+            grade: newDemand.requiredGrade || 'A',
+            pricePerKgINR: newDemand.expectedPricePerUnit || 18,
+            farmerSource: 'Aggregated Local Farmers Pool',
+            fieldAgentId: 'FA-10234',
+            fieldAgentName: 'Gurpreet Singh',
+            inventoryFacility: 'Ludhiana Approved Storage Facility #4',
+            logisticsPartner: 'Sample Fleet Partner',
+            driverName: 'Raj Kumar',
+            driverPhone: '+91 98765 12345',
+            vehicleNumber: 'PB-10-CZ-4921',
+            companyName: 'FreshAgro Foods Pvt Ltd',
+            createdDate: new Date().toISOString().split('T')[0],
+            currentStatus: 'Demand Created',
+            paymentStatus: 'Pending',
+            completionPercent: 10,
+            riskStatus: 'Low Risk',
+            custodyCheckpoints: [],
+            financials: {
+              companyPayment: newDemand.quantity * (newDemand.expectedPricePerUnit || 18),
+              farmerPayment: newDemand.quantity * 16,
+              fieldAgentCost: newDemand.quantity * 0.5,
+              logisticsCost: 4000,
+              storageCost: 1500,
+              qualityHandlingCost: 1000,
+              platformServiceFee: 2500,
+              netMargin: 0,
+            },
+          };
+          setOrders((prev) => [...prev, newOrder].sort((a, b) => a.orderId.localeCompare(b.orderId)));
+        }
+      };
+    }
+
+    if (channel2) {
+      channel2.onmessage = (event) => {
+        if (event.data?.type === 'FARMER_REGISTERED' || event.data?.type === 'COMPANY_REGISTERED') {
+          reloadMasterData();
+        }
+      };
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'kisan_admin_farmers_master' || e.key === 'kisan_admin_companies_master' || e.key === 'kisan_last_sync_event') {
+        reloadMasterData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (channel1) channel1.close();
+      if (channel2) channel2.close();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   const updateConfig = (newConfig: Partial<BusinessRulesConfig>) => {

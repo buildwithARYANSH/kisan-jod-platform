@@ -139,6 +139,43 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try { localStorage.setItem('kisan_admin_orders', JSON.stringify(orders)); } catch (e) { console.warn(e); }
   }, [orders]);
 
+  // Subscribe to cross-port sync events for field agent tasks & farmers
+  useEffect(() => {
+    const channel = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_reactive_channel') : null;
+
+    const reloadAgentData = () => {
+      try {
+        const savedTasks = localStorage.getItem('kisan_admin_tasks');
+        if (savedTasks) setTasks(JSON.parse(savedTasks));
+        const savedFarmers = localStorage.getItem('kisan_admin_farmers');
+        if (savedFarmers) setFarmers(JSON.parse(savedFarmers));
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
+    if (channel) {
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'CROP_ADDED' || event.data?.type === 'FARMER_REGISTERED') {
+          reloadAgentData();
+        }
+      };
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'kisan_admin_tasks' || e.key === 'kisan_admin_farmers' || e.key === 'kisan_last_sync_event') {
+        reloadAgentData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   const updateTaskStatus = (id: string, status: TaskStatus, reason?: string) => {

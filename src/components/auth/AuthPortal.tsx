@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCompany } from '../../context/CompanyContext';
+import { syncFarmerRegistered, syncCompanyRegistered } from '../../services/unifiedSync';
 
 interface AuthPortalProps {
   onLoginSuccess: (role: 'farmer' | 'company') => void;
@@ -190,6 +191,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
         registeredDate: new Date().toISOString().split('T')[0],
       };
       localStorage.setItem('kisan_registered_farmers', JSON.stringify([newEntry, ...existing]));
+      syncFarmerRegistered(newEntry);
     } catch (err) {
       console.warn(err);
     }
@@ -236,6 +238,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
         registeredDate: new Date().toISOString().split('T')[0],
       };
       localStorage.setItem('kisan_registered_companies', JSON.stringify([newEntry, ...existing]));
+      syncCompanyRegistered(newEntry);
     } catch (err) {
       console.warn(err);
     }

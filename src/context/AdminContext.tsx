@@ -83,8 +83,24 @@ export const AdminProvider: React.FC<{ children: React.ReactNode; initialSection
     }
   });
 
-  const [farmers] = useState<AdminFarmerItem[]>(INITIAL_ADMIN_FARMERS);
-  const [companies] = useState<AdminCompanyItem[]>(INITIAL_ADMIN_COMPANIES);
+  const [farmers, setFarmers] = useState<AdminFarmerItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_admin_farmers_master');
+      return saved ? JSON.parse(saved) : INITIAL_ADMIN_FARMERS;
+    } catch {
+      return INITIAL_ADMIN_FARMERS;
+    }
+  });
+
+  const [companies, setCompanies] = useState<AdminCompanyItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_admin_companies_master');
+      return saved ? JSON.parse(saved) : INITIAL_ADMIN_COMPANIES;
+    } catch {
+      return INITIAL_ADMIN_COMPANIES;
+    }
+  });
+
   const [fieldAgents] = useState<AdminFieldAgentItem[]>(INITIAL_ADMIN_FIELD_AGENTS);
   const [warehouses] = useState<WarehouseFacility[]>(INITIAL_WAREHOUSES);
 
@@ -103,6 +119,43 @@ export const AdminProvider: React.FC<{ children: React.ReactNode; initialSection
       localStorage.setItem('kisan_admin_profile', JSON.stringify(profile));
     } catch (e) { console.warn(e); }
   }, [profile]);
+
+  // Subscribe to cross-port sync events for farmers & companies
+  useEffect(() => {
+    const channel = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_reactive_channel') : null;
+    
+    const reloadMasterData = () => {
+      try {
+        const savedFarmers = localStorage.getItem('kisan_admin_farmers_master');
+        if (savedFarmers) setFarmers(JSON.parse(savedFarmers));
+        const savedCompanies = localStorage.getItem('kisan_admin_companies_master');
+        if (savedCompanies) setCompanies(JSON.parse(savedCompanies));
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
+    if (channel) {
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'FARMER_REGISTERED' || event.data?.type === 'COMPANY_REGISTERED') {
+          reloadMasterData();
+        }
+      };
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'kisan_admin_farmers_master' || e.key === 'kisan_admin_companies_master' || e.key === 'kisan_last_sync_event') {
+        reloadMasterData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   const updateProfile = (updated: Partial<AdminProfile>) => {
     setProfile((prev) => ({ ...prev, ...updated }));

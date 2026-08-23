@@ -51,7 +51,7 @@ import {
 import { INITIAL_DEMANDS, INITIAL_WOMEN_PRODUCTS, INITIAL_WOMEN_RESOURCES, INITIAL_PAYCHECKS, INITIAL_NOTIFICATIONS as INITIAL_FARMER_NOTIF, INITIAL_COMPLAINTS } from '../data/initialData';
 
 export interface SyncEventPayload {
-  type: 'DEMAND_ADDED' | 'CROP_ADDED' | 'QUALITY_VERIFIED' | 'DELIVERY_CONFIRMED' | 'DATA_RESET';
+  type: 'DEMAND_ADDED' | 'CROP_ADDED' | 'QUALITY_VERIFIED' | 'DELIVERY_CONFIRMED' | 'DATA_RESET' | 'FARMER_REGISTERED' | 'COMPANY_REGISTERED';
   data?: any;
   timestamp: number;
 }
@@ -299,5 +299,101 @@ export const syncDeliveryConfirmed = (orderId: string, deliveredQty: number, rec
     broadcastSyncEvent('DELIVERY_CONFIRMED', { orderId, deliveredQty, receiverName });
   } catch (e) {
     console.warn('Error syncing delivery confirmed:', e);
+  }
+};
+
+// Helper: Sync when a new Farmer registers
+export const syncFarmerRegistered = (farmerData: any) => {
+  try {
+    const adminFarmers = JSON.parse(localStorage.getItem('kisan_admin_farmers_master') || '[]');
+    const newAdminFarmer = {
+      id: farmerData.id || `FAR-${Date.now().toString().slice(-4)}`,
+      name: farmerData.name,
+      phone: farmerData.phone,
+      address: `${farmerData.village || ''}, ${farmerData.district || ''} ${farmerData.state || ''}`.trim(),
+      region: `${farmerData.district || 'Local'} Hub Region`,
+      assignedFieldAgent: 'AGT-101 (Ramesh Kumar)',
+      registeredDate: farmerData.registeredDate || new Date().toISOString().split('T')[0],
+      lastActivityDate: new Date().toISOString().split('T')[0],
+      crops: [],
+      bankName: farmerData.bankName || 'State Bank of India',
+      accountNumberMasked: farmerData.accountNumber ? `XXXX-XXXX-${farmerData.accountNumber.slice(-4)}` : 'XXXX-XXXX-1234',
+      totalQuantitySupplied: 0,
+      activeOrdersCount: 0,
+      completedOrdersCount: 0,
+      disputesCount: 0,
+      referralSource: 'Direct Farmer Registration',
+      // SuperAdmin fields
+      farmerId: farmerData.id || `FAR-${Date.now().toString().slice(-4)}`,
+      village: farmerData.village || 'Local Village',
+      district: farmerData.district || 'Local District',
+      state: farmerData.state || 'Punjab',
+      registeredCropsCount: 0,
+      totalSoldQuantityKg: 0,
+      totalEarningsINR: 0,
+      registeredDateTimestamp: new Date().toISOString().split('T')[0],
+      lastActivityTimestamp: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedFarmers = [newAdminFarmer, ...adminFarmers.filter((f: any) => f.id !== newAdminFarmer.id)];
+    localStorage.setItem('kisan_admin_farmers_master', JSON.stringify(updatedFarmers));
+
+    // Also update field agent assigned farmer roster
+    const agentFarmers = JSON.parse(localStorage.getItem('kisan_admin_farmers') || '[]');
+    const newAgentFarmer = {
+      id: newAdminFarmer.id,
+      name: farmerData.name,
+      phone: farmerData.phone,
+      village: farmerData.village || 'Local Village',
+      registeredDate: farmerData.registeredDate || new Date().toISOString().split('T')[0],
+      totalCropsListed: 0,
+      lastInteraction: 'Directly Registered',
+      status: 'Active',
+    };
+    localStorage.setItem('kisan_admin_farmers', JSON.stringify([newAgentFarmer, ...agentFarmers]));
+
+    broadcastSyncEvent('FARMER_REGISTERED', newAdminFarmer);
+  } catch (e) {
+    console.warn('Error syncing farmer registered:', e);
+  }
+};
+
+// Helper: Sync when a new Company registers
+export const syncCompanyRegistered = (companyData: any) => {
+  try {
+    const adminCompanies = JSON.parse(localStorage.getItem('kisan_admin_companies_master') || '[]');
+    const newAdminCompany = {
+      id: companyData.id || `COMP-${Date.now().toString().slice(-4)}`,
+      name: companyData.companyName || companyData.name,
+      companyName: companyData.companyName || companyData.name,
+      branch: companyData.procurementHub || 'Headquarters',
+      address: companyData.registeredAddress || 'Main Industry Zone',
+      email: companyData.email,
+      phone: companyData.phone,
+      executiveHead: companyData.contactPerson || 'Authorized Representative',
+      executivePhone: companyData.phone,
+      registrationDate: companyData.registeredDate || new Date().toISOString().split('T')[0],
+      lastActivityDate: new Date().toISOString().split('T')[0],
+      totalDemandsCount: 0,
+      activeDemandsCount: 0,
+      completedOrdersCount: 0,
+      totalPurchaseValue: 0,
+      // SuperAdmin fields
+      companyId: companyData.id || `COMP-${Date.now().toString().slice(-4)}`,
+      gstin: companyData.gstin || '27AAAAA0000A1Z5',
+      procurementHub: companyData.procurementHub || 'Regional Hub',
+      contactPerson: companyData.contactPerson || 'Authorized Representative',
+      totalProcuredKg: 0,
+      totalSpentINR: 0,
+      registeredDateTimestamp: companyData.registeredDate || new Date().toISOString().split('T')[0],
+      lastActivityTimestamp: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedCompanies = [newAdminCompany, ...adminCompanies.filter((c: any) => c.id !== newAdminCompany.id)];
+    localStorage.setItem('kisan_admin_companies_master', JSON.stringify(updatedCompanies));
+
+    broadcastSyncEvent('COMPANY_REGISTERED', newAdminCompany);
+  } catch (e) {
+    console.warn('Error syncing company registered:', e);
   }
 };
