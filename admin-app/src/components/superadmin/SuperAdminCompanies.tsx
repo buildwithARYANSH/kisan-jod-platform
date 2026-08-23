@@ -8,10 +8,15 @@ export const SuperAdminCompanies: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<MasterCompany | null>(null);
 
-  const filtered = companies.filter((c) =>
-    c.companyName.toLowerCase().includes(search.toLowerCase()) ||
-    c.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = (companies || []).filter((c) => {
+    if (!c) return false;
+    const name = c.companyName || c.name || '';
+    const id = c.id || c.companyId || '';
+    return (
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      id.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   return (
     <div className="space-y-6">

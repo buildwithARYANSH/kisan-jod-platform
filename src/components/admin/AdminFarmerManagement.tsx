@@ -15,16 +15,23 @@ export const AdminFarmerManagement: React.FC = () => {
   const thresholdMs = inactivityThresholdDays * 24 * 60 * 60 * 1000;
 
   // Compute Active/Inactive status dynamically per farmer
-  const filteredFarmers = farmers.filter((farmer) => {
-    const lastActiveMs = new Date(farmer.lastActivityDate).getTime();
-    const isActive = nowMs - lastActiveMs <= thresholdMs;
+  const filteredFarmers = (farmers || []).filter((farmer) => {
+    if (!farmer) return false;
+    const lastActiveStr = farmer.lastActivityDate || farmer.registeredDate || new Date().toISOString().split('T')[0];
+    const lastActiveMs = new Date(lastActiveStr).getTime();
+    const isActive = isNaN(lastActiveMs) ? true : (nowMs - lastActiveMs <= thresholdMs);
+
+    const farmerName = farmer.name || farmer.farmerId || '';
+    const farmerId = farmer.id || farmer.farmerId || '';
+    const farmerPhone = farmer.phone || '';
+    const farmerRegion = farmer.region || 'All';
 
     const matchesSearch = 
-      farmer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      farmer.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      farmer.phone.includes(searchTerm);
+      farmerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      farmerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      farmerPhone.includes(searchTerm);
 
-    const matchesRegion = selectedRegion === 'All' || farmer.region === selectedRegion;
+    const matchesRegion = selectedRegion === 'All' || farmerRegion === selectedRegion;
     const matchesStatus = 
       statusFilter === 'All' || 
       (statusFilter === 'Active' && isActive) || 

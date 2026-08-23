@@ -302,55 +302,60 @@ export const syncDeliveryConfirmed = (orderId: string, deliveredQty: number, rec
   }
 };
 
-// Helper: Sync when a new Farmer registers
+/// Helper: Sync when a new Farmer registers
 export const syncFarmerRegistered = (farmerData: any) => {
   try {
     const adminFarmers = JSON.parse(localStorage.getItem('kisan_admin_farmers_master') || '[]');
+    const farmerId = farmerData.id || `FAR-${Date.now().toString().slice(-4)}`;
+    const farmerName = farmerData.name || farmerData.farmerName || 'Registered Farmer';
+    const farmerPhone = farmerData.phone || farmerData.farmerPhone || '+91 98000 00000';
+    const regDate = farmerData.registeredDate || new Date().toISOString().split('T')[0];
+
     const newAdminFarmer = {
-      id: farmerData.id || `FAR-${Date.now().toString().slice(-4)}`,
-      name: farmerData.name,
-      phone: farmerData.phone,
-      address: `${farmerData.village || ''}, ${farmerData.district || ''} ${farmerData.state || ''}`.trim(),
-      region: `${farmerData.district || 'Local'} Hub Region`,
+      id: farmerId,
+      farmerId: farmerId,
+      name: farmerName,
+      phone: farmerPhone,
+      address: `${farmerData.village || ''}, ${farmerData.district || ''} ${farmerData.state || ''}`.trim() || 'Local Region',
+      region: `${farmerData.district || farmerData.village || 'Local'} Hub Region`,
       assignedFieldAgent: 'AGT-101 (Ramesh Kumar)',
-      registeredDate: farmerData.registeredDate || new Date().toISOString().split('T')[0],
-      lastActivityDate: new Date().toISOString().split('T')[0],
-      crops: [],
+      registeredDate: regDate,
+      lastActivityDate: regDate,
+      crops: farmerData.crops || ['Fresh Produce'],
       bankName: farmerData.bankName || 'State Bank of India',
-      accountNumberMasked: farmerData.accountNumber ? `XXXX-XXXX-${farmerData.accountNumber.slice(-4)}` : 'XXXX-XXXX-1234',
+      accountNumberMasked: farmerData.accountNumber ? `XXXX-XXXX-${String(farmerData.accountNumber).slice(-4)}` : 'XXXX-XXXX-1234',
       totalQuantitySupplied: 0,
       activeOrdersCount: 0,
       completedOrdersCount: 0,
       disputesCount: 0,
       referralSource: 'Direct Farmer Registration',
       // SuperAdmin fields
-      farmerId: farmerData.id || `FAR-${Date.now().toString().slice(-4)}`,
       village: farmerData.village || 'Local Village',
       district: farmerData.district || 'Local District',
       state: farmerData.state || 'Punjab',
       registeredCropsCount: 0,
       totalSoldQuantityKg: 0,
       totalEarningsINR: 0,
-      registeredDateTimestamp: new Date().toISOString().split('T')[0],
-      lastActivityTimestamp: new Date().toISOString().split('T')[0],
+      registeredDateTimestamp: regDate,
+      lastActivityTimestamp: regDate,
     };
 
-    const updatedFarmers = [newAdminFarmer, ...adminFarmers.filter((f: any) => f.id !== newAdminFarmer.id)];
+    const updatedFarmers = [newAdminFarmer, ...adminFarmers.filter((f: any) => f.id !== farmerId && f.farmerId !== farmerId)];
     localStorage.setItem('kisan_admin_farmers_master', JSON.stringify(updatedFarmers));
 
     // Also update field agent assigned farmer roster
     const agentFarmers = JSON.parse(localStorage.getItem('kisan_admin_farmers') || '[]');
     const newAgentFarmer = {
-      id: newAdminFarmer.id,
-      name: farmerData.name,
-      phone: farmerData.phone,
+      id: farmerId,
+      name: farmerName,
+      phone: farmerPhone,
       village: farmerData.village || 'Local Village',
-      registeredDate: farmerData.registeredDate || new Date().toISOString().split('T')[0],
+      registeredDate: regDate,
       totalCropsListed: 0,
       lastInteraction: 'Directly Registered',
       status: 'Active',
     };
-    localStorage.setItem('kisan_admin_farmers', JSON.stringify([newAgentFarmer, ...agentFarmers]));
+    localStorage.setItem('kisan_admin_farmers', JSON.stringify([newAgentFarmer, ...agentFarmers.filter((f: any) => f.id !== farmerId)]));
 
     broadcastSyncEvent('FARMER_REGISTERED', newAdminFarmer);
   } catch (e) {
@@ -362,34 +367,39 @@ export const syncFarmerRegistered = (farmerData: any) => {
 export const syncCompanyRegistered = (companyData: any) => {
   try {
     const adminCompanies = JSON.parse(localStorage.getItem('kisan_admin_companies_master') || '[]');
+    const companyId = companyData.id || `COMP-${Date.now().toString().slice(-4)}`;
+    const compName = companyData.companyName || companyData.name || 'Registered Company';
+    const compPhone = companyData.phone || '+91 98000 00000';
+    const regDate = companyData.registeredDate || new Date().toISOString().split('T')[0];
+
     const newAdminCompany = {
-      id: companyData.id || `COMP-${Date.now().toString().slice(-4)}`,
-      name: companyData.companyName || companyData.name,
-      companyName: companyData.companyName || companyData.name,
+      id: companyId,
+      companyId: companyId,
+      name: compName,
+      companyName: compName,
       branch: companyData.procurementHub || 'Headquarters',
       address: companyData.registeredAddress || 'Main Industry Zone',
-      email: companyData.email,
-      phone: companyData.phone,
+      email: companyData.email || 'corporate@kisanjod.in',
+      phone: compPhone,
       executiveHead: companyData.contactPerson || 'Authorized Representative',
-      executivePhone: companyData.phone,
-      registrationDate: companyData.registeredDate || new Date().toISOString().split('T')[0],
-      lastActivityDate: new Date().toISOString().split('T')[0],
+      executivePhone: compPhone,
+      registrationDate: regDate,
+      lastActivityDate: regDate,
       totalDemandsCount: 0,
       activeDemandsCount: 0,
       completedOrdersCount: 0,
       totalPurchaseValue: 0,
       // SuperAdmin fields
-      companyId: companyData.id || `COMP-${Date.now().toString().slice(-4)}`,
       gstin: companyData.gstin || '27AAAAA0000A1Z5',
       procurementHub: companyData.procurementHub || 'Regional Hub',
       contactPerson: companyData.contactPerson || 'Authorized Representative',
       totalProcuredKg: 0,
       totalSpentINR: 0,
-      registeredDateTimestamp: companyData.registeredDate || new Date().toISOString().split('T')[0],
-      lastActivityTimestamp: new Date().toISOString().split('T')[0],
+      registeredDateTimestamp: regDate,
+      lastActivityTimestamp: regDate,
     };
 
-    const updatedCompanies = [newAdminCompany, ...adminCompanies.filter((c: any) => c.id !== newAdminCompany.id)];
+    const updatedCompanies = [newAdminCompany, ...adminCompanies.filter((c: any) => c.id !== companyId && c.companyId !== companyId)];
     localStorage.setItem('kisan_admin_companies_master', JSON.stringify(updatedCompanies));
 
     broadcastSyncEvent('COMPANY_REGISTERED', newAdminCompany);

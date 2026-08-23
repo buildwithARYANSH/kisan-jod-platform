@@ -9,8 +9,12 @@ export const SuperAdminFarmers: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
   const [selectedFarmer, setSelectedFarmer] = useState<MasterFarmer | null>(null);
 
-  const filteredFarmers = farmers.filter((f) => {
-    const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase()) || f.id.toLowerCase().includes(search.toLowerCase()) || f.region.toLowerCase().includes(search.toLowerCase());
+  const filteredFarmers = (farmers || []).filter((f) => {
+    if (!f) return false;
+    const name = f.name || f.farmerId || '';
+    const id = f.id || f.farmerId || '';
+    const region = f.region || f.district || 'Local';
+    const matchesSearch = name.toLowerCase().includes(search.toLowerCase()) || id.toLowerCase().includes(search.toLowerCase()) || region.toLowerCase().includes(search.toLowerCase());
     const active = isFarmerActive(f);
     if (statusFilter === 'Active') return matchesSearch && active;
     if (statusFilter === 'Inactive') return matchesSearch && !active;

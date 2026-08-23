@@ -14,11 +14,15 @@ export const AdminCompanyManagement: React.FC = () => {
   const nowMs = new Date().getTime();
   const thresholdMs = inactivityThresholdDays * 24 * 60 * 60 * 1000;
 
-  const filteredCompanies = companies.filter((c) => {
+  const filteredCompanies = (companies || []).filter((c) => {
+    if (!c) return false;
+    const name = c.name || c.companyName || '';
+    const id = c.id || c.companyId || '';
+    const branch = c.branch || c.procurementHub || '';
     return (
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.branch.toLowerCase().includes(searchTerm.toLowerCase())
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      branch.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
