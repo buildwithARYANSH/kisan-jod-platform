@@ -62,8 +62,10 @@ function MainAppContent() {
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     try {
-      // Use sessionStorage so every new tab/visit opens the Login Screen first
-      return sessionStorage.getItem('kisan_session_active') === 'true';
+      const isLoggedOut = localStorage.getItem('kisan_auth_logged_out') === 'true';
+      if (isLoggedOut) return false;
+      const sessionActive = sessionStorage.getItem('kisan_session_active') === 'true';
+      return sessionActive;
     } catch {
       return false;
     }
@@ -88,6 +90,7 @@ function MainAppContent() {
     handleSwitchPersona(role);
     setIsLoggedIn(true);
     try {
+      localStorage.removeItem('kisan_auth_logged_out');
       sessionStorage.setItem('kisan_session_active', 'true');
       localStorage.setItem('kisan_auth_logged_in', 'true');
     } catch (e) {
@@ -98,6 +101,7 @@ function MainAppContent() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     try {
+      localStorage.setItem('kisan_auth_logged_out', 'true');
       sessionStorage.removeItem('kisan_session_active');
       localStorage.removeItem('kisan_auth_logged_in');
     } catch (e) {
@@ -156,7 +160,7 @@ function MainAppContent() {
       </div>
 
       {farmerCompanyPersona === 'company' ? (
-        <CompanyPortalLayout />
+        <CompanyPortalLayout onSwitchPersona={handleSwitchPersona} />
       ) : (
         <FarmerPortal />
       )}

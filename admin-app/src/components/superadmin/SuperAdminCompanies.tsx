@@ -50,17 +50,23 @@ export const SuperAdminCompanies: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filtered.map((c) => {
                 const active = isCompanyActive(c);
+                const compName = c.companyName || c.name || 'Company';
+                const compId = c.id || c.companyId || '';
+                const branchStr = c.branch || c.procurementHub || 'Headquarters';
+                const execName = c.executiveHead || c.contactPerson || 'Authorized Lead';
+                const execPhone = c.executivePhone || c.phone || '';
+                const purchaseVal = (c.totalPurchaseValueINR ?? c.totalPurchaseValue ?? 0).toLocaleString();
 
                 return (
-                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <tr key={compId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="p-3">
-                      <strong className="text-gray-900  block">{c.companyName}</strong>
-                      <span className="text-[10px] font-mono text-gray-400">{c.id}</span>
+                      <strong className="text-gray-900  block">{compName}</strong>
+                      <span className="text-[10px] font-mono text-gray-400">{compId}</span>
                     </td>
-                    <td className="p-3">{c.branch}</td>
+                    <td className="p-3">{branchStr}</td>
                     <td className="p-3">
-                      <strong className="block">{c.executiveHead}</strong>
-                      <span className="text-[10px] text-gray-500">{c.executivePhone}</span>
+                      <strong className="block">{execName}</strong>
+                      <span className="text-[10px] text-gray-500">{execPhone}</span>
                     </td>
                     <td className="p-3">
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
@@ -71,10 +77,10 @@ export const SuperAdminCompanies: React.FC = () => {
                         {active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="p-3 font-semibold">{c.totalDemandsCount} ({c.activeDemandsCount} Active)</td>
-                    <td className="p-3 font-semibold">{c.completedOrdersCount}</td>
+                    <td className="p-3 font-semibold">{c.totalDemandsCount ?? 0} ({c.activeDemandsCount ?? 0} Active)</td>
+                    <td className="p-3 font-semibold">{c.completedOrdersCount ?? 0}</td>
                     <td className="p-3 text-right font-black text-gray-900  text-sm">
-                      ₹{c.totalPurchaseValueINR.toLocaleString()}
+                      ₹{purchaseVal}
                     </td>
                     <td className="p-3 text-right">
                       <button

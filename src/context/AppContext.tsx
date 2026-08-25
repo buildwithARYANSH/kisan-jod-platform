@@ -26,7 +26,7 @@ import {
 import { TRANSLATIONS, type Translations } from '../i18n/translations';
 import { speakText, stopSpeaking } from '../services/speechService';
 import { fireConfetti } from '../utils/confetti';
-import { subscribeToSyncEvents, syncCropAdded } from '../services/unifiedSync';
+import { subscribeToSyncEvents, syncCropAdded, syncCropUpdated, syncCropDeleted, loadAllUnifiedFarmerDemands } from '../services/unifiedSync';
 
 interface Toast {
   id: string;
@@ -49,6 +49,7 @@ interface AppContextType {
   // Navigation
   activeSection: NavSection;
   setActiveSection: (sec: NavSection) => void;
+  navigationTrigger: number;
 
   // Data Collections
   demands: IndustryDemand[];
@@ -64,6 +65,7 @@ interface AppContextType {
 
   womenProducts: WomenProduct[];
   addWomenProduct: (prod: Omit<WomenProduct, 'id' | 'dateAdded'>) => void;
+  deleteWomenProduct: (id: string) => void;
   
   womenResources: WomenResource[];
   addWomenResource: (res: Omit<WomenResource, 'id' | 'dateAdded' | 'status'>) => void;
@@ -74,6 +76,8 @@ interface AppContextType {
 
   profile: FarmerProfile;
   updateProfile: (updated: Partial<FarmerProfile>) => void;
+  registerNewFarmer: (updated: Partial<FarmerProfile>) => void;
+  loginFarmer: (phone: string, fallbackProfile: Partial<FarmerProfile>) => void;
 
   // Notifications
   notifications: NotificationItem[];
@@ -126,19 +130,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Active navigation section
-  const [activeSection, setActiveSection] = useState<NavSection>('home');
+  const [activeSection, setActiveSectionState] = useState<NavSection>('home');
+  const [navigationTrigger, setNavigationTrigger] = useState<number>(0);
+
+  const setActiveSection = (sec: NavSection) => {
+    setActiveSectionState(sec);
+    setNavigationTrigger((prev) => prev + 1);
+  };
 
   // Accessibility Text Reader Mode
   const [textReaderActive, setTextReaderActive] = useState<boolean>(false);
 
   // Data Collections with LocalStorage Persistence
   const [demands, setDemands] = useState<IndustryDemand[]>(() => {
-    try {
-      const saved = localStorage.getItem('kisan_demands');
-      return saved ? JSON.parse(saved) : INITIAL_DEMANDS;
-    } catch {
-      return INITIAL_DEMANDS;
-    }
+    return loadAllUnifiedFarmerDemands();
   });
 
   const [crops, setCrops] = useState<FarmerCrop[]>(() => {
@@ -199,7 +204,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
     try {
       const saved = localStorage.getItem('kisan_notifications');
-      return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+      return parsed.map((n: NotificationItem) => {
+        const initial = INITIAL_NOTIFICATIONS.find((init) => init.id === n.id);
+        return {
+          ...n,
+          titleHi: n.titleHi || (initial ? initial.titleHi : '🛒 किसान सूचना'),
+          messageHi: n.messageHi || (initial ? initial.messageHi : n.message),
+          timestampHi: n.timestampHi || (initial ? initial.timestampHi : n.timestamp),
+        };
+      });
     } catch {
       return INITIAL_NOTIFICATIONS;
     }
@@ -266,29 +280,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     try {
-      localStorage.setItem('kisan_demands', JSON.stringify(demands));
-    } catch (e) { console.warn(e); }
-  }, [demands]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem('kisan_profile', JSON.stringify(profile));
     } catch (e) { console.warn(e); }
   }, [profile]);
 
-  // Reactive Cross-Port Event Listener (< 5ms sync)
+  // Reactive Cross-Port & Single Shared DB Listener (< 1ms sync)
   useEffect(() => {
     const unsubscribe = subscribeToSyncEvents((payload) => {
-      if (payload.type === 'DEMAND_ADDED') {
+      if (
+        payload.type === 'DEMAND_ADDED' ||
+        payload.type === 'DEMAND_UPDATED' ||
+        payload.type === 'DEMAND_DELETED' ||
+        payload.type === 'CROP_ADDED' ||
+        payload.type === 'CROP_UPDATED' ||
+        payload.type === 'CROP_DELETED' ||
+        payload.type === 'DATA_RESET'
+      ) {
         try {
-          const saved = localStorage.getItem('kisan_demands');
-          if (saved) setDemands(JSON.parse(saved));
-        } catch (e) { console.warn(e); }
+          const synced = loadAllUnifiedFarmerDemands();
+          setDemands(synced);
+        } catch (e) {
+          console.warn(e);
+        }
       } else if (payload.type === 'DELIVERY_CONFIRMED') {
         try {
           const savedPaychecks = localStorage.getItem('kisan_paychecks');
           if (savedPaychecks) setPaychecks(JSON.parse(savedPaychecks));
-        } catch (e) { console.warn(e); }
+        } catch (e) {
+          console.warn(e);
+        }
       }
     });
 
@@ -349,14 +369,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Find matching demand if applicable
     const matchedDemand = demands.find(
-      (d) => d.cropName.toLowerCase().includes(cropData.cropName.toLowerCase()) || 
-             cropData.cropName.toLowerCase().includes(d.cropName.toLowerCase())
+      (d) =>
+        (selectedCropForAdd && d.id === selectedCropForAdd.id) ||
+        d.cropName.toLowerCase().includes(cropData.cropName.toLowerCase()) ||
+        cropData.cropName.toLowerCase().includes(d.cropName.toLowerCase())
     );
+
+    const allocatedPrice = matchedDemand ? matchedDemand.pricePerKg : cropData.offerPrice || 18;
 
     const newCrop: FarmerCrop = {
       ...cropData,
       id,
       registrationDate,
+      offerPrice: allocatedPrice,
       matchedDemandId: matchedDemand ? matchedDemand.id : undefined,
       matchedDemandCrop: matchedDemand ? `${matchedDemand.cropName} (Industrial Pool)` : undefined,
       status: 'Listed',
@@ -370,7 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDemands((prevDemands) =>
         prevDemands.map((d) =>
           d.id === matchedDemand.id
-            ? { ...d, registeredQty: d.registeredQty + cropData.quantity }
+            ? { ...d, registeredQty: (d.registeredQty || 0) + cropData.quantity }
             : d
         )
       );
@@ -379,13 +404,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fireConfetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
     showToast(t.addCropSuccess, 'success');
 
-    // Trigger Cross-Port Reactive Synchronization (Port 5173 -> Port 5174)
+    // Trigger Single Database Shared Reactive Synchronization (Port 5173 -> Company Portal & Port 5174)
     syncCropAdded(newCrop, profile.name);
   };
 
   const updateCrop = (id: string, updated: Partial<FarmerCrop>) => {
+    const previousCrop = crops.find((c) => c.id === id);
+    const previousQty = previousCrop ? previousCrop.quantity : 0;
+    
+    const updatedCrop = previousCrop ? { ...previousCrop, ...updated } : null;
+    
     setCrops((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
     showToast('Crop details updated', 'info');
+
+    if (updatedCrop) {
+      syncCropUpdated(updatedCrop, previousQty);
+    }
   };
 
   const deleteCrop = (id: string) => {
@@ -401,6 +435,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setCrops((prev) => prev.filter((c) => c.id !== id));
     showToast('Crop removed', 'info');
+
+    if (targetCrop) {
+      syncCropDeleted(targetCrop);
+    }
   };
 
   // Waste Management Actions
@@ -435,6 +473,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newProd: WomenProduct = { ...prod, id, dateAdded };
     setWomenProducts((prev) => [newProd, ...prev]);
     showToast('Product added to Women Enterprise marketplace!', 'success');
+  };
+
+  const deleteWomenProduct = (id: string) => {
+    setWomenProducts((prev) => prev.filter((p) => p.id !== id));
+    showToast('Women Enterprise product deleted', 'info');
   };
 
   const addWomenResource = (res: Omit<WomenResource, 'id' | 'dateAdded' | 'status'>) => {
@@ -474,6 +517,88 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Profile updated', 'success');
   };
 
+  // Register NEW Farmer Action (Starts 100% CLEAN: 0 crops, 0 waste, 0 women products/resources, 0 paychecks)
+  const registerNewFarmer = (updated: Partial<FarmerProfile>) => {
+    const newProfile = { ...INITIAL_PROFILE, ...updated };
+    setProfile(newProfile);
+    setCrops([]);
+    setWasteItems([]);
+    setWomenProducts([]);
+    setWomenResources([]);
+    setPaychecks([]);
+    setComplaints([]);
+
+    const phoneKey = updated.phone || 'new_farmer';
+    try {
+      localStorage.setItem('kisan_profile', JSON.stringify(newProfile));
+      localStorage.setItem('kisan_crops', JSON.stringify([]));
+      localStorage.setItem('kisan_waste', JSON.stringify([]));
+      localStorage.setItem('kisan_women_products', JSON.stringify([]));
+      localStorage.setItem('kisan_women_resources', JSON.stringify([]));
+      localStorage.setItem('kisan_paychecks', JSON.stringify([]));
+      localStorage.setItem('kisan_complaints', JSON.stringify([]));
+      
+      // Persist per-farmer data isolated store
+      localStorage.setItem(`kisan_farmer_data_${phoneKey}`, JSON.stringify({
+        profile: newProfile,
+        crops: [],
+        wasteItems: [],
+        womenProducts: [],
+        womenResources: [],
+        paychecks: [],
+        complaints: [],
+      }));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  // Login EXISTING Farmer Action (Restores that farmer's exact saved crops, waste, women products, and paychecks)
+  const loginFarmer = (phone: string, fallbackProfile: Partial<FarmerProfile>) => {
+    const phoneKey = phone || fallbackProfile.phone || 'default';
+    try {
+      const savedData = localStorage.getItem(`kisan_farmer_data_${phoneKey}`);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.profile) setProfile(parsed.profile);
+        setCrops(parsed.crops || []);
+        setWasteItems(parsed.wasteItems || []);
+        setWomenProducts(parsed.womenProducts || []);
+        setWomenResources(parsed.womenResources || []);
+        setPaychecks(parsed.paychecks || []);
+        setComplaints(parsed.complaints || []);
+
+        localStorage.setItem('kisan_profile', JSON.stringify(parsed.profile || { ...INITIAL_PROFILE, ...fallbackProfile }));
+        localStorage.setItem('kisan_crops', JSON.stringify(parsed.crops || []));
+        localStorage.setItem('kisan_waste', JSON.stringify(parsed.wasteItems || []));
+        localStorage.setItem('kisan_women_products', JSON.stringify(parsed.womenProducts || []));
+        localStorage.setItem('kisan_women_resources', JSON.stringify(parsed.womenResources || []));
+        localStorage.setItem('kisan_paychecks', JSON.stringify(parsed.paychecks || []));
+        localStorage.setItem('kisan_complaints', JSON.stringify(parsed.complaints || []));
+        return;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Default demo farmer (Gurdev Singh) fallback
+    const newProfile = { ...INITIAL_PROFILE, ...fallbackProfile };
+    setProfile(newProfile);
+    if (phoneKey === '+91 98765 43210' || fallbackProfile.name === 'Gurdev Singh') {
+      setCrops(INITIAL_CROPS);
+      setWasteItems(INITIAL_WASTE);
+      setWomenProducts(INITIAL_WOMEN_PRODUCTS);
+      setWomenResources(INITIAL_WOMEN_RESOURCES);
+      setPaychecks(INITIAL_PAYCHECKS);
+    } else {
+      setCrops([]);
+      setWasteItems([]);
+      setWomenProducts([]);
+      setWomenResources([]);
+      setPaychecks([]);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -489,6 +614,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         activeSection,
         setActiveSection,
+        navigationTrigger,
 
         demands,
         crops,
@@ -503,6 +629,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         womenProducts,
         addWomenProduct,
+        deleteWomenProduct,
 
         womenResources,
         addWomenResource,
@@ -513,6 +640,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         profile,
         updateProfile,
+        registerNewFarmer,
+        loginFarmer,
 
         notifications,
         unreadNotificationsCount,

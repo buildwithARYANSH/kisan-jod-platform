@@ -11,7 +11,8 @@ export const NotificationModal: React.FC = () => {
     markAllNotificationsRead,
     setActiveSection,
     speak,
-    textReaderActive
+    textReaderActive,
+    language
   } = useApp();
 
   if (!isNotificationModalOpen) return null;
@@ -32,8 +33,10 @@ export const NotificationModal: React.FC = () => {
   };
 
   const handleNotificationClick = (item: typeof notifications[0]) => {
+    const itemTitle = language === 'hi' ? (item.titleHi || item.title) : item.title;
+    const itemMsg = language === 'hi' ? (item.messageHi || item.message) : item.message;
     if (textReaderActive) {
-      speak(item.title + '. ' + item.message);
+      speak(itemTitle + '. ' + itemMsg);
     }
     if (item.actionUrl) {
       setActiveSection(item.actionUrl);
@@ -57,10 +60,12 @@ export const NotificationModal: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-black text-slate-900 font-fraunces leading-tight">
-                Farmer Notifications (सूचनाएं)
+                {language === 'hi' ? 'किसान सूचनाएं' : 'Farmer Notifications'}
               </h3>
               <p className="text-xs text-slate-500 font-semibold">
-                Live demand alerts, order pickup updates & payment credits
+                {language === 'hi'
+                  ? 'लाइव मांग अलर्ट, ऑर्डर पिकअप अपडेट और पेमेंट रसीदें'
+                  : 'Live demand alerts, order pickup updates & payment credits'}
               </p>
             </div>
           </div>
@@ -81,48 +86,84 @@ export const NotificationModal: React.FC = () => {
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
-              Mark all as read
+              {language === 'hi' ? 'सभी को पढ़ा हुआ चिन्हित करें' : 'Mark all as read'}
             </button>
           </div>
         )}
 
         {/* Notifications List */}
         <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => handleNotificationClick(n)}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 relative ${
-                n.read
-                  ? 'bg-slate-50 border-slate-200 hover:bg-slate-100'
-                  : 'bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-100/80'
-              }`}
-            >
-              <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs shrink-0 mt-0.5">
-                {getIcon(n.type)}
-              </div>
+          {notifications.map((n) => {
+            let displayTitle = n.title;
+            let displayMessage = n.message;
+            let displayTimestamp = n.timestamp;
 
-              <div className="flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-xs sm:text-sm font-black text-slate-900 font-fraunces">
-                    {n.title}
-                  </h4>
-                  <span className="text-[10px] text-slate-500 font-bold shrink-0">
-                    {n.timestamp}
-                  </span>
+            if (language === 'hi') {
+              if (n.titleHi) {
+                displayTitle = n.titleHi;
+              } else if (n.type === 'demand' || n.title.toLowerCase().includes('demand') || n.title.toLowerCase().includes('tomato')) {
+                displayTitle = '🛒 टमाटर की तत्काल मांग बढ़ी';
+              } else if (n.type === 'payment' || n.title.toLowerCase().includes('payment')) {
+                displayTitle = '💰 भुगतान सफलतापूर्वक प्राप्त हुआ';
+              } else {
+                displayTitle = `🔔 ${n.title}`;
+              }
+
+              if (n.messageHi) {
+                displayMessage = n.messageHi;
+              } else if (n.type === 'demand') {
+                displayMessage = 'इंडस्ट्रियल खरीदार फ्रेशएग्रो ने ₹18/किलो पर 1,00,000 किलो टमाटर की मांग बढ़ाई है। अपनी फसल अभी दर्ज करें!';
+              } else if (n.type === 'payment') {
+                displayMessage = 'टमाटर बिक्री का ₹8,40,000 आपके SBI बैंक खाते ****4921 में जमा कर दिया गया है।';
+              }
+
+              if (n.timestampHi) {
+                displayTimestamp = n.timestampHi;
+              } else if (n.timestamp === '10 mins ago') {
+                displayTimestamp = '10 मिनट पहले';
+              } else if (n.timestamp === '2 hours ago') {
+                displayTimestamp = '2 घंटे पहले';
+              }
+            }
+
+            return (
+              <div
+                key={n.id}
+                onClick={() => handleNotificationClick(n)}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 relative ${
+                  n.read
+                    ? 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    : 'bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-100/80'
+                }`}
+              >
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs shrink-0 mt-0.5">
+                  {getIcon(n.type)}
                 </div>
-                <p className="text-xs text-slate-700 font-semibold mt-1 leading-relaxed">
-                  {n.message}
-                </p>
 
-                {n.actionUrl && (
-                  <span className="inline-block mt-2 text-[11px] font-extrabold text-emerald-700 hover:underline">
-                    View in {n.actionUrl.toUpperCase()} →
-                  </span>
-                )}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 font-fraunces">
+                      {displayTitle}
+                    </h4>
+                    <span className="text-[10px] text-slate-500 font-bold shrink-0">
+                      {displayTimestamp}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-700 font-semibold mt-1 leading-relaxed">
+                    {displayMessage}
+                  </p>
+
+                  {n.actionUrl && (
+                    <span className="inline-block mt-2 text-[11px] font-extrabold text-emerald-700 hover:underline">
+                      {language === 'hi'
+                        ? `${n.actionUrl.toUpperCase()} में देखें →`
+                        : `View in ${n.actionUrl.toUpperCase()} →`}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Modal Footer */}
@@ -131,7 +172,7 @@ export const NotificationModal: React.FC = () => {
             onClick={() => setIsNotificationModalOpen(false)}
             className="py-2.5 px-5 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-md hover:bg-emerald-700 cursor-pointer"
           >
-            Close Notifications
+            {language === 'hi' ? 'सूचनाएं बंद करें' : 'Close Notifications'}
           </button>
         </div>
       </div>

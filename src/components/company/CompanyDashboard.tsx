@@ -14,11 +14,12 @@ import {
   Sparkles,
   Zap,
   BarChart3,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
 
 export const CompanyDashboard: React.FC = () => {
-  const { demands, qualityBatches, receipts, orders, setActiveSection } = useCompany();
+  const { demands, qualityBatches, receipts, orders, setActiveSection, deleteDemand } = useCompany();
 
   // Revertible View Mode State: 'catchy' (Enhanced Executive View) vs 'classic' (Original Compact View)
   const [viewMode, setViewMode] = useState<'catchy' | 'classic'>('catchy');
@@ -262,58 +263,85 @@ export const CompanyDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              {demands.map((demand) => {
-                const matchPercent = Math.min(100, Math.round((demand.matchedQuantity / demand.quantity) * 100));
-                const remaining = Math.max(0, demand.quantity - demand.matchedQuantity);
-
-                return (
-                  <div
-                    key={demand.id}
-                    className="p-5 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-blue-50/30 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-blue-300 transition-colors"
+              {(!demands || demands.length === 0) ? (
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 font-semibold">
+                  <Building2 className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                  <p className="font-bold text-slate-800 text-base font-fraunces">No Active Requirements Posted</p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    Click "Post New Requirement" to create your first bulk crop or biomass procurement demand.
+                  </p>
+                  <button
+                    onClick={() => setActiveSection('demand-entry')}
+                    className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-xs cursor-pointer"
                   >
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-black text-slate-900 font-fraunces">
-                          {demand.cropName}
-                        </span>
-                        <span className={`px-2.5 py-0.5 rounded-md text-xs font-black ${
-                          demand.category === 'Agri Waste & Biomass' 
-                            ? 'bg-amber-100 text-amber-950 border border-amber-300' 
-                            : 'bg-blue-100 text-blue-950 border border-blue-300'
-                        }`}>
-                          {demand.category || `Grade ${demand.requiredGrade}`}
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-extrabold">
-                          {demand.status}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600 font-semibold">
-                        Hub: {demand.deliveryLocation} • Target Price: <strong className="text-blue-900 font-bold">₹{demand.expectedPricePerUnit}/{demand.unit}</strong>
-                      </p>
-                    </div>
+                    Post First Requirement
+                  </button>
+                </div>
+              ) : (
+                demands.map((demand) => {
+                  const matchPercent = Math.min(100, Math.round((demand.matchedQuantity / demand.quantity) * 100));
+                  const remaining = Math.max(0, demand.quantity - demand.matchedQuantity);
 
-                    <div className="w-full md:w-80 space-y-1.5">
-                      <div className="flex justify-between text-xs font-extrabold text-slate-800">
-                        <span>Matched: {demand.matchedQuantity.toLocaleString()} {demand.unit}</span>
-                        <span>Required: {demand.quantity.toLocaleString()} {demand.unit}</span>
+                  return (
+                    <div
+                      key={demand.id}
+                      className="p-5 rounded-2xl bg-gradient-to-r from-slate-50 via-white to-blue-50/30 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-blue-300 transition-colors"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base font-black text-slate-900 font-fraunces">
+                            {demand.cropName}
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-md text-xs font-black ${
+                            demand.category === 'Agri Waste & Biomass' 
+                              ? 'bg-amber-100 text-amber-950 border border-amber-300' 
+                              : 'bg-blue-100 text-blue-950 border border-blue-300'
+                          }`}>
+                            {demand.category || `Grade ${demand.requiredGrade}`}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 text-xs font-extrabold">
+                            {demand.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 font-semibold">
+                          Hub: {demand.deliveryLocation} • Target Price: <strong className="text-blue-900 font-bold">₹{demand.expectedPricePerUnit}/{demand.unit}</strong>
+                        </p>
                       </div>
-                      <div className="w-full h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full transition-all duration-500 shadow-xs"
-                          style={{ width: `${matchPercent}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-slate-600 font-semibold">
-                        <span className="text-emerald-700 font-black flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          {matchPercent}% Supply Allocated
-                        </span>
-                        <span>Remaining: {remaining.toLocaleString()} {demand.unit}</span>
+
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="w-full md:w-80 space-y-1.5">
+                          <div className="flex justify-between text-xs font-extrabold text-slate-800">
+                            <span>Matched: {demand.matchedQuantity.toLocaleString()} {demand.unit}</span>
+                            <span>Required: {demand.quantity.toLocaleString()} {demand.unit}</span>
+                          </div>
+                          <div className="w-full h-3.5 bg-slate-200 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full transition-all duration-500 shadow-xs"
+                              style={{ width: `${matchPercent}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-slate-600 font-semibold">
+                            <span className="text-emerald-700 font-black flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              {matchPercent}% Supply Allocated
+                            </span>
+                            <span>Remaining: {remaining.toLocaleString()} {demand.unit}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          title="Delete Requirement"
+                          onClick={() => deleteDemand(demand.id)}
+                          className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-200 transition-colors cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -324,37 +352,47 @@ export const CompanyDashboard: React.FC = () => {
               Live Procurement Activity Stream
             </h3>
 
-            <div className="space-y-3 text-xs sm:text-sm font-semibold">
-              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">
-                    Supply Matched: 65,000 kg Grade A Tomato allocated across 3 Farmer Aggregation Pools in Ludhiana Hub.
-                  </p>
-                  <span className="text-xs text-slate-500 font-semibold">15 mins ago</span>
-                </div>
+            {(!demands || demands.length === 0) ? (
+              <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 font-semibold">
+                <Clock className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="font-bold text-slate-800 text-base font-fraunces">No Procurement Activity Yet</p>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  Live activity stream will automatically update here as soon as corporate requirements are posted and produce is matched with local farmers.
+                </p>
               </div>
+            ) : (
+              <div className="space-y-3 text-xs sm:text-sm font-semibold">
+                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-900">
+                      Supply Matched: 65,000 kg Grade A Tomato allocated across 3 Farmer Aggregation Pools in Ludhiana Hub.
+                    </p>
+                    <span className="text-xs text-slate-500 font-semibold">15 mins ago</span>
+                  </div>
+                </div>
 
-              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center gap-3">
-                <Truck className="w-5 h-5 text-blue-600 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">
-                    Shipment Dispatched: Batch #LOT-2026-9920 loaded via Sample Logistics Partner (Vehicle #PB-10-CZ-4921).
-                  </p>
-                  <span className="text-xs text-slate-500 font-semibold">2 hours ago</span>
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center gap-3">
+                  <Truck className="w-5 h-5 text-blue-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-900">
+                      Shipment Dispatched: Batch #LOT-2026-9920 loaded via Sample Logistics Partner (Vehicle #PB-10-CZ-4921).
+                    </p>
+                    <span className="text-xs text-slate-500 font-semibold">2 hours ago</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-purple-600 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-slate-900">
-                    Quality Rating Generated: Field Agent inspection complete. Star rating 4.5/5 assigned to Batch #LOT-2026-9920.
-                  </p>
-                  <span className="text-xs text-slate-500 font-semibold">1 day ago</span>
+                <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 flex items-center gap-3">
+                  <ShieldCheck className="w-5 h-5 text-purple-600 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-900">
+                      Quality Rating Generated: Field Agent inspection complete. Star rating 4.5/5 assigned to Batch #LOT-2026-9920.
+                    </p>
+                    <span className="text-xs text-slate-500 font-semibold">1 day ago</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </>
       ) : (

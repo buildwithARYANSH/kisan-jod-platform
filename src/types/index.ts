@@ -124,9 +124,12 @@ export interface FarmerProfile {
 export interface NotificationItem {
   id: string;
   title: string;
+  titleHi?: string;
   message: string;
+  messageHi?: string;
   type: 'demand' | 'pickup' | 'payment' | 'waste' | 'system';
   timestamp: string;
+  timestampHi?: string;
   read: boolean;
   actionUrl?: NavSection;
 }

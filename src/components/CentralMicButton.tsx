@@ -1,14 +1,13 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { Mic, Sparkles, MessageSquare } from 'lucide-react';
+import { stopSpeaking } from '../services/speechService';
 
 export const CentralMicButton: React.FC = () => {
   const { t, setIsVoiceModalOpen, speak, textReaderActive } = useApp();
 
   const handleMicClick = () => {
-    if (textReaderActive) {
-      speak(t.micPrompt);
-    }
+    stopSpeaking();
     setIsVoiceModalOpen(true);
   };
 
@@ -72,6 +71,12 @@ export const CentralMicButton: React.FC = () => {
               className="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-950 font-bold transition-colors shadow-xs text-left cursor-pointer"
             >
               🎤 "मेरा पेमेंट दिखाओ"
+            </button>
+            <button
+              onClick={handleMicClick}
+              className="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-950 font-bold transition-colors shadow-xs text-left cursor-pointer"
+            >
+              🎤 "भाषा बदलकर हिंदी कर दीजिए"
             </button>
           </div>
         </div>

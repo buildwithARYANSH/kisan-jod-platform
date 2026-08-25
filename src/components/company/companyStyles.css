@@ -1,0 +1,435 @@
+/* ==========================================================================
+   AgriCore — Enterprise Industrial Buyer Procurement OS
+   High-Performance Cinematic Dark Operating System (GPU-Accelerated 60-120 FPS)
+   Smooth Continuous Ambient Motion & Clean Typography Layout
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   DARK THEME COLOR TOKENS
+   Deep Dark Neutrals: #0d1210, #111514, #141916, #171c19, #1b211d, #20251f
+   Accents: Deep Forest, Muted Sage, Soft Moss, Warm Amber, Subtle Gold
+   -------------------------------------------------------------------------- */
+:root {
+  --ag-bg-base: #111514;
+  --ag-bg-deep: #0d1210;
+  --ag-bg-surface: #171c19;
+  --ag-bg-elevated: #1b211d;
+  --ag-bg-card: #19201c;
+  --ag-bg-overlay: rgba(17, 21, 20, 0.92);
+
+  --ag-border-subtle: rgba(255, 255, 255, 0.08);
+  --ag-border-medium: rgba(255, 255, 255, 0.14);
+  --ag-border-forest: rgba(34, 197, 94, 0.25);
+  --ag-border-amber: rgba(217, 119, 6, 0.25);
+
+  --ag-text-primary: #f8faf8;
+  --ag-text-secondary: #d1d5db;
+  --ag-text-muted: #8e9e92;
+
+  --ag-forest-primary: #15803d;
+  --ag-forest-glow: rgba(22, 101, 52, 0.35);
+  --ag-sage: #84a98c;
+  --ag-moss: #52796f;
+  --ag-amber: #d97706;
+  --ag-gold: #eab308;
+  --ag-blue: #3b82f6;
+
+  --ag-shadow-ambient: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   LAYER 1 & 2: GPU-ACCELERATED HARDWARE LIGHTING ENGINE (NO CPU LAG)
+   Uses translate3d and pre-rendered soft gradients without heavy runtime blurs
+   ========================================================================== */
+.ag-living-light-stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-color: var(--ag-bg-base);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+#cursorInteractionCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Autonomous Moving Light Beam 1 - Forest Drift */
+.ag-light-beam-forest {
+  position: absolute;
+  top: -15%;
+  left: 5%;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(22, 101, 52, 0.22) 0%,
+    rgba(20, 83, 45, 0.12) 35%,
+    rgba(17, 21, 20, 0.04) 60%,
+    transparent 75%
+  );
+  transform: translate3d(0, 0, 0);
+  animation: agForestDrift 30s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Autonomous Moving Light Beam 2 - Warm Amber Drift */
+.ag-light-beam-amber {
+  position: absolute;
+  bottom: -15%;
+  right: 5%;
+  width: 750px;
+  height: 750px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(217, 119, 6, 0.15) 0%,
+    rgba(180, 83, 9, 0.08) 35%,
+    rgba(17, 21, 20, 0.03) 60%,
+    transparent 75%
+  );
+  transform: translate3d(0, 0, 0);
+  animation: agAmberDrift 36s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Autonomous Moving Light Beam 3 - Center Moss Drift */
+.ag-light-beam-moss {
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  width: 650px;
+  height: 650px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(47, 94, 69, 0.16) 0%,
+    rgba(30, 58, 44, 0.08) 40%,
+    transparent 70%
+  );
+  transform: translate3d(0, 0, 0);
+  animation: agMossDrift 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Atmospheric Ambient Horizon */
+.ag-atmospheric-horizon {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 18, 16, 0.4) 0%,
+    rgba(17, 21, 20, 0) 35%,
+    rgba(13, 18, 16, 0.65) 100%
+  );
+  pointer-events: none;
+}
+
+/* Pure GPU-accelerated Keyframe Animations */
+@keyframes agForestDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(120px, 70px, 0) scale(1.15);
+  }
+  100% {
+    transform: translate3d(-60px, 120px, 0) scale(0.95);
+  }
+}
+
+@keyframes agAmberDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(-130px, -90px, 0) scale(1.18);
+  }
+  100% {
+    transform: translate3d(80px, 50px, 0) scale(1.05);
+  }
+}
+
+@keyframes agMossDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-80px, 70px, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(90px, -60px, 0) scale(0.9);
+  }
+}
+
+/* Time of Day Overlays */
+.ag-tod-morning .ag-light-beam-amber {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.2) 0%, rgba(180, 83, 9, 0.1) 40%, transparent 70%);
+}
+.ag-tod-afternoon .ag-light-beam-forest {
+  background: radial-gradient(circle, rgba(22, 101, 52, 0.25) 0%, rgba(20, 83, 45, 0.12) 40%, transparent 70%);
+}
+.ag-tod-evening .ag-light-beam-amber {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.12) 40%, transparent 70%);
+}
+.ag-tod-night .ag-light-beam-forest {
+  background: radial-gradient(circle, rgba(6, 78, 59, 0.2) 0%, rgba(4, 47, 46, 0.08) 40%, transparent 70%);
+}
+
+/* ==========================================================================
+   NAVIGATION BAR & PILL (CLEAN, NO OVERWRITING)
+   ========================================================================== */
+.ag-nav-pill {
+  background: rgba(23, 28, 25, 0.95);
+  border: 1px solid var(--ag-border-medium);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.ag-nav-link {
+  position: relative;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ag-text-muted);
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+.ag-nav-link:hover {
+  color: var(--ag-text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+.ag-nav-link.active {
+  color: #ffffff;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.ag-branch-select {
+  background: rgba(27, 33, 29, 0.95);
+  border: 1px solid var(--ag-border-medium);
+  color: var(--ag-text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  outline: none;
+}
+.ag-branch-select:hover {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+/* ==========================================================================
+   BUTTONS & ACTIONS
+   ========================================================================== */
+.ag-btn-primary {
+  background: #15803d;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(74, 222, 128, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.4);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ag-btn-primary:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+
+.ag-btn-secondary {
+  background: rgba(27, 33, 29, 0.85);
+  color: var(--ag-text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  border: 1px solid var(--ag-border-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ag-btn-secondary:hover {
+  background: rgba(36, 45, 39, 0.95);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   CARDS & CONTAINERS (PRECISE SPACING, NO OVERFLOW)
+   ========================================================================== */
+.ag-card {
+  background: rgba(23, 28, 25, 0.92);
+  border: 1px solid var(--ag-border-subtle);
+  border-radius: 1.25rem;
+  box-shadow: var(--ag-shadow-ambient);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.ag-card:hover {
+  border-color: var(--ag-border-medium);
+  background: rgba(25, 31, 27, 0.97);
+}
+
+.ag-card-glow {
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(22, 101, 52, 0.2);
+}
+
+/* Radar Pulse */
+.ag-radar-signal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 197, 94, 0.6);
+  animation: agRadarPulse 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  pointer-events: none;
+}
+.ag-radar-signal:nth-child(2) {
+  animation-delay: 0.9s;
+}
+.ag-radar-signal:nth-child(3) {
+  animation-delay: 1.8s;
+}
+
+@keyframes agRadarPulse {
+  0% {
+    width: 60px;
+    height: 60px;
+    opacity: 0.9;
+    border-color: rgba(74, 222, 128, 0.8);
+  }
+  100% {
+    width: 520px;
+    height: 520px;
+    opacity: 0;
+    border-color: rgba(22, 101, 52, 0);
+  }
+}
+
+/* Light Map */
+#trackingMapContainer {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #141916;
+  border: 1px solid var(--ag-border-medium);
+  box-shadow: var(--ag-shadow-ambient);
+}
+
+.truck-floating-capsule {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(23, 28, 25, 0.96);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+  border-radius: 0.85rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  z-index: 25;
+}
+
+/* AI Assistant & Notification Drawers */
+.ai-assistant-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 45;
+  background: #1b211d;
+  color: var(--ag-text-primary);
+  padding: 0.65rem 1.15rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.ai-assistant-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+#aiAssistantDrawer {
+  position: fixed;
+  bottom: 4.8rem;
+  right: 1.5rem;
+  width: 380px;
+  max-width: calc(100vw - 3rem);
+  background: rgba(23, 28, 25, 0.98);
+  border-radius: 1.25rem;
+  border: 1px solid var(--ag-border-medium);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#aiAssistantDrawer.open {
+  display: flex;
+}
+
+#notificationDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(23, 28, 25, 0.98);
+  border-left: 1px solid var(--ag-border-medium);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+  z-index: 60;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+#notificationDrawer.open {
+  transform: translateX(0);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

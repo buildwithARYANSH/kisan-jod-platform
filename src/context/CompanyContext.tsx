@@ -22,7 +22,7 @@ import {
   COMPANY_BANK_ESCROW_DETAILS
 } from '../data/mockCompany';
 import { fireConfetti } from '../utils/confetti';
-import { subscribeToSyncEvents, syncDemandAdded } from '../services/unifiedSync';
+import { subscribeToSyncEvents, syncDemandAdded, syncDemandUpdated, syncDemandDeleted } from '../services/unifiedSync';
 
 interface CompanyContextType {
   activeSection: CompanyNavSection;
@@ -47,6 +47,8 @@ interface CompanyContextType {
 
   profile: CompanyProfile;
   updateProfile: (updated: Partial<CompanyProfile>) => void;
+  registerNewCompany: (updated: Partial<CompanyProfile>) => void;
+  loginCompany: (phoneOrName: string, fallbackProfile: Partial<CompanyProfile>) => void;
 
   // Company Notifications
   companyNotifications: CompanyNotification[];
@@ -75,7 +77,11 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [demands, setDemands] = useState<CompanyDemand[]>(() => {
     try {
       const saved = localStorage.getItem('kisan_company_demands');
-      return saved ? JSON.parse(saved) : INITIAL_COMPANY_DEMANDS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_COMPANY_DEMANDS;
     } catch {
       return INITIAL_COMPANY_DEMANDS;
     }
@@ -83,12 +89,45 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [fairPricing] = useState<Record<string, FairPriceFactors>>(MOCK_FAIR_PRICING);
 
-  const [qualityBatches] = useState<QualityBatch[]>(INITIAL_QUALITY_BATCHES);
+  const [qualityBatches, setQualityBatches] = useState<QualityBatch[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_quality_batches');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_QUALITY_BATCHES;
+    } catch {
+      return INITIAL_QUALITY_BATCHES;
+    }
+  });
 
-  const [receipts] = useState<CompanyReceipt[]>(INITIAL_COMPANY_RECEIPTS);
+  const [receipts, setReceipts] = useState<CompanyReceipt[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_company_receipts');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_COMPANY_RECEIPTS;
+    } catch {
+      return INITIAL_COMPANY_RECEIPTS;
+    }
+  });
   const [selectedReceipt, setSelectedReceipt] = useState<CompanyReceipt | null>(null);
 
-  const [orders] = useState<ShipmentOrder[]>(INITIAL_SHIPMENT_ORDERS);
+  const [orders, setOrders] = useState<ShipmentOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('kisan_shipment_orders');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_SHIPMENT_ORDERS;
+    } catch {
+      return INITIAL_SHIPMENT_ORDERS;
+    }
+  });
   const [selectedOrder, setSelectedOrder] = useState<ShipmentOrder | null>(null);
 
   const [profile, setProfile] = useState<CompanyProfile>(() => {
@@ -104,7 +143,11 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [companyNotifications, setCompanyNotifications] = useState<CompanyNotification[]>(() => {
     try {
       const saved = localStorage.getItem('kisan_company_notifications');
-      return saved ? JSON.parse(saved) : INITIAL_COMPANY_NOTIFICATIONS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return INITIAL_COMPANY_NOTIFICATIONS;
     } catch {
       return INITIAL_COMPANY_NOTIFICATIONS;
     }
@@ -126,18 +169,50 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     try {
+      localStorage.setItem('kisan_quality_batches', JSON.stringify(qualityBatches));
+    } catch (e) { console.warn(e); }
+  }, [qualityBatches]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kisan_company_receipts', JSON.stringify(receipts));
+    } catch (e) { console.warn(e); }
+  }, [receipts]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kisan_shipment_orders', JSON.stringify(orders));
+    } catch (e) { console.warn(e); }
+  }, [orders]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem('kisan_company_profile', JSON.stringify(profile));
     } catch (e) { console.warn(e); }
   }, [profile]);
 
-  // Reactive Cross-Port Listener (< 5ms sync)
+  // Reactive Cross-Port & Single Shared DB Listener (< 1ms sync)
   useEffect(() => {
     const unsubscribe = subscribeToSyncEvents((payload) => {
-      if (payload.type === 'CROP_ADDED' || payload.type === 'QUALITY_VERIFIED' || payload.type === 'DELIVERY_CONFIRMED') {
+      if (
+        payload.type === 'CROP_ADDED' ||
+        payload.type === 'CROP_UPDATED' ||
+        payload.type === 'CROP_DELETED' ||
+        payload.type === 'DEMAND_ADDED' ||
+        payload.type === 'DEMAND_UPDATED' ||
+        payload.type === 'DEMAND_DELETED' ||
+        payload.type === 'QUALITY_VERIFIED' ||
+        payload.type === 'DELIVERY_CONFIRMED' ||
+        payload.type === 'DATA_RESET'
+      ) {
         try {
           const savedDemands = localStorage.getItem('kisan_company_demands');
-          if (savedDemands) setDemands(JSON.parse(savedDemands));
-        } catch (e) { console.warn(e); }
+          if (savedDemands) {
+            setDemands(JSON.parse(savedDemands));
+          }
+        } catch (e) {
+          console.warn(e);
+        }
       }
     });
 
@@ -200,20 +275,106 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setDemands((prev) => [newDemand, ...prev]);
     fireConfetti({ particleCount: 40, spread: 50 });
 
-    // Trigger Cross-Port Reactive Synchronization (Port 5173 -> Port 5174)
+    // Trigger Single Database Shared Reactive Synchronization (Port 5173 -> Farmer Portal & Port 5174)
     syncDemandAdded(newDemand);
   };
 
   const updateDemandStatus = (id: string, status: CompanyDemand['status']) => {
     setDemands((prev) => prev.map((d) => (d.id === id ? { ...d, status } : d)));
+    syncDemandUpdated(id, { status });
   };
 
   const deleteDemand = (id: string) => {
     setDemands((prev) => prev.filter((d) => d.id !== id));
+    syncDemandDeleted(id);
   };
 
   const updateProfile = (updated: Partial<CompanyProfile>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
+  };
+
+  // Register NEW Company Action (Starts 100% CLEAN: 0 demands, 0 quality batches, 0 receipts, 0 payment proofs)
+  const registerNewCompany = (updated: Partial<CompanyProfile>) => {
+    const newProfile = { ...INITIAL_COMPANY_PROFILE, ...updated };
+    setProfile(newProfile);
+    setDemands([]);
+    setQualityBatches([]);
+    setReceipts([]);
+    setOrders([]);
+    setPaymentSubmissions([]);
+    setCompanyNotifications([]);
+    setCompanyComplaints([]);
+
+    const phoneKey = updated.phone || updated.companyName || 'new_company';
+    try {
+      localStorage.setItem('kisan_company_profile', JSON.stringify(newProfile));
+      localStorage.setItem('kisan_company_demands', JSON.stringify([]));
+      localStorage.setItem('kisan_quality_batches', JSON.stringify([]));
+      localStorage.setItem('kisan_company_receipts', JSON.stringify([]));
+      localStorage.setItem('kisan_shipment_orders', JSON.stringify([]));
+      localStorage.setItem('kisan_company_notifications', JSON.stringify([]));
+
+      localStorage.setItem(`kisan_company_data_${phoneKey}`, JSON.stringify({
+        profile: newProfile,
+        demands: [],
+        qualityBatches: [],
+        receipts: [],
+        orders: [],
+        paymentSubmissions: [],
+        companyNotifications: [],
+        companyComplaints: [],
+      }));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  // Login EXISTING Company Action (Restores that company's exact saved demands, quality batches, receipts, orders)
+  const loginCompany = (phoneOrName: string, fallbackProfile: Partial<CompanyProfile>) => {
+    const phoneKey = phoneOrName || fallbackProfile.phone || fallbackProfile.companyName || 'default';
+    try {
+      const savedData = localStorage.getItem(`kisan_company_data_${phoneKey}`);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.profile) setProfile(parsed.profile);
+        setDemands(parsed.demands || []);
+        setQualityBatches(parsed.qualityBatches || []);
+        setReceipts(parsed.receipts || []);
+        setOrders(parsed.orders || []);
+        setPaymentSubmissions(parsed.paymentSubmissions || []);
+        setCompanyNotifications(parsed.companyNotifications || []);
+        setCompanyComplaints(parsed.companyComplaints || []);
+
+        localStorage.setItem('kisan_company_profile', JSON.stringify(parsed.profile || { ...INITIAL_COMPANY_PROFILE, ...fallbackProfile }));
+        localStorage.setItem('kisan_company_demands', JSON.stringify(parsed.demands || []));
+        localStorage.setItem('kisan_quality_batches', JSON.stringify(parsed.qualityBatches || []));
+        localStorage.setItem('kisan_company_receipts', JSON.stringify(parsed.receipts || []));
+        localStorage.setItem('kisan_shipment_orders', JSON.stringify(parsed.orders || []));
+        localStorage.setItem('kisan_company_notifications', JSON.stringify(parsed.companyNotifications || []));
+        return;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Default demo company fallback
+    const newProfile = { ...INITIAL_COMPANY_PROFILE, ...fallbackProfile };
+    setProfile(newProfile);
+    if (phoneKey.includes('98112') || fallbackProfile.companyName?.includes('FreshAgro')) {
+      setDemands(INITIAL_COMPANY_DEMANDS);
+      setQualityBatches(INITIAL_QUALITY_BATCHES);
+      setReceipts(INITIAL_COMPANY_RECEIPTS);
+      setOrders(INITIAL_SHIPMENT_ORDERS);
+      setCompanyNotifications(INITIAL_COMPANY_NOTIFICATIONS);
+    } else {
+      setDemands([]);
+      setQualityBatches([]);
+      setReceipts([]);
+      setOrders([]);
+      setPaymentSubmissions([]);
+      setCompanyNotifications([]);
+      setCompanyComplaints([]);
+    }
   };
 
   return (
@@ -240,6 +401,8 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         profile,
         updateProfile,
+        registerNewCompany,
+        loginCompany,
 
         companyNotifications,
         unreadCompanyNotificationsCount,

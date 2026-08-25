@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
-import { User, Phone, Mail, MapPin, Edit3, ShieldCheck, DollarSign } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Edit3, ShieldCheck, DollarSign, LogOut } from 'lucide-react';
 
-export const AdminProfileView: React.FC = () => {
+interface AdminProfileViewProps {
+  onLogout?: () => void;
+}
+
+export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onLogout }) => {
   const { profile, updateProfile } = useAdmin();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -92,6 +96,16 @@ export const AdminProfileView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          className="w-full py-3 rounded-2xl bg-red-50 text-red-600 font-extrabold text-sm border border-red-200 hover:bg-red-100 transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>सुरक्षित लॉगआउट (Logout)</span>
+        </button>
+      )}
 
       {/* Edit Profile Modal */}
       {isEditOpen && (

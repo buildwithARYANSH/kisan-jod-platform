@@ -283,15 +283,47 @@ export const MyCropSection: React.FC = () => {
                 </label>
                 <select
                   value={cropName}
-                  onChange={(e) => setCropName(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500"
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setCropName(newName);
+                    const matched = demands.find(
+                      (d) =>
+                        d.cropName.toLowerCase().includes(newName.toLowerCase()) ||
+                        newName.toLowerCase().includes(d.cropName.toLowerCase())
+                    );
+                    if (matched && matched.gradeRequirement) {
+                      setGrade(matched.gradeRequirement);
+                    }
+                  }}
+                  className="w-full p-3 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
+                  {/* Default staple crops */}
                   <option value="Tomato">Tomato (टमाटर)</option>
                   <option value="Potato">Potato (आलू)</option>
                   <option value="Wheat">Wheat (गेहूं)</option>
                   <option value="Red Onion">Red Onion (प्याज)</option>
+                  <option value="Basmati Rice">Basmati Rice (बासमती चावल)</option>
                   <option value="Maize (Corn)">Maize (मक्का)</option>
                   <option value="Cotton">Cotton (कपास)</option>
+                  <option value="Mustard">Mustard (सरसों)</option>
+                  <option value="Sugarcane">Sugarcane (गन्ना)</option>
+                  <option value="Soybean">Soybean (सोयाबीन)</option>
+                  <option value="Green Chilli">Green Chilli (हरी मिर्च)</option>
+
+                  {/* Any additional unique demanded crops dynamically fetched from Company shared DB */}
+                  {demands
+                    .filter((d) => {
+                      const standardNames = [
+                        'tomato', 'potato', 'wheat', 'red onion', 'basmati rice', 
+                        'maize (corn)', 'cotton', 'mustard', 'sugarcane', 'soybean', 'green chilli'
+                      ];
+                      return !standardNames.some((sn) => d.cropName.toLowerCase().includes(sn));
+                    })
+                    .map((d) => (
+                      <option key={d.id} value={d.cropName}>
+                        {d.cropName} {d.cropNameHi ? `(${d.cropNameHi})` : ''} — [Buyer Rate: ₹{d.pricePerKg}/kg]
+                      </option>
+                    ))}
                 </select>
               </div>
 

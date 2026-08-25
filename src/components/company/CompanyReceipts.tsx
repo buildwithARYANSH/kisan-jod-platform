@@ -27,57 +27,65 @@ export const CompanyReceipts: React.FC = () => {
 
       {/* Receipts Table */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-md">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm text-slate-800 font-semibold">
-            <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
-              <tr>
-                <th className="p-3.5">Invoice ID / Crop</th>
-                <th className="p-3.5">Quantity</th>
-                <th className="p-3.5">Product Cost</th>
-                <th className="p-3.5">Transport (Pass-through)</th>
-                <th className="p-3.5">Platform Fee</th>
-                <th className="p-3.5">Total Payable</th>
-                <th className="p-3.5">Status</th>
-                <th className="p-3.5 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {receipts.map((rec) => (
-                <tr key={rec.id} className="hover:bg-slate-50">
-                  <td className="p-3.5">
-                    <strong className="text-slate-900 font-black block font-fraunces">{rec.cropName}</strong>
-                    <span className="text-[10px] text-slate-500 font-mono font-bold">{rec.invoiceId} • {rec.date}</span>
-                  </td>
-                  <td className="p-3.5 font-bold">{rec.quantity.toLocaleString()} {rec.unit}</td>
-                  <td className="p-3.5 font-black text-slate-900">₹{rec.productCost.toLocaleString()}</td>
-                  <td className="p-3.5 text-amber-800 font-extrabold">₹{rec.transportCost.toLocaleString()}</td>
-                  <td className="p-3.5 text-blue-800 font-extrabold">₹{rec.platformFee.toLocaleString()}</td>
-                  <td className="p-3.5 font-black text-slate-900 text-base font-fraunces">
-                    ₹{rec.totalPayable.toLocaleString()}
-                  </td>
-                  <td className="p-3.5">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-black ${
-                      rec.paymentStatus === 'Paid'
-                        ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
-                        : 'bg-amber-100 text-amber-950 border border-amber-300'
-                    }`}>
-                      {rec.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-right">
-                    <button
-                      onClick={() => setSelectedReceipt(rec)}
-                      className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer ml-auto"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View Invoice
-                    </button>
-                  </td>
+        {(!receipts || receipts.length === 0) ? (
+          <div className="py-12 text-center text-slate-500 font-semibold">
+            <ReceiptText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="font-bold text-slate-800 text-base font-fraunces">No Invoices or Payment Receipts Yet</p>
+            <p className="text-xs text-slate-500 mt-1">Itemized invoices will automatically be generated here when procurement orders are matched & fulfilled.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm text-slate-800 font-semibold">
+              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th className="p-3.5">Invoice ID / Crop</th>
+                  <th className="p-3.5">Quantity</th>
+                  <th className="p-3.5">Product Cost</th>
+                  <th className="p-3.5">Transport (Pass-through)</th>
+                  <th className="p-3.5">Platform Fee</th>
+                  <th className="p-3.5">Total Payable</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5 text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {receipts.map((rec) => (
+                  <tr key={rec.id} className="hover:bg-slate-50">
+                    <td className="p-3.5">
+                      <strong className="text-slate-900 font-black block font-fraunces">{rec.cropName}</strong>
+                      <span className="text-[10px] text-slate-500 font-mono font-bold">{rec.invoiceId} • {rec.date}</span>
+                    </td>
+                    <td className="p-3.5 font-bold">{rec.quantity.toLocaleString()} {rec.unit}</td>
+                    <td className="p-3.5 font-black text-slate-900">₹{rec.productCost.toLocaleString()}</td>
+                    <td className="p-3.5 text-amber-800 font-extrabold">₹{rec.transportCost.toLocaleString()}</td>
+                    <td className="p-3.5 text-blue-800 font-extrabold">₹{rec.platformFee.toLocaleString()}</td>
+                    <td className="p-3.5 font-black text-slate-900 text-base font-fraunces">
+                      ₹{rec.totalPayable.toLocaleString()}
+                    </td>
+                    <td className="p-3.5">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-black ${
+                        rec.paymentStatus === 'Paid'
+                          ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                          : 'bg-amber-100 text-amber-950 border border-amber-300'
+                      }`}>
+                        {rec.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <button
+                        onClick={() => setSelectedReceipt(rec)}
+                        className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer ml-auto"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

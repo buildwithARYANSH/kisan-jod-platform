@@ -116,11 +116,26 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'NOT-101',
     title: '🛒 Urgent Tomato Demand Surge',
+    titleHi: '🛒 टमाटर की तत्काल मांग बढ़ी',
     message: 'Industrial buyer FreshAgro increased Tomato requirement to 100,000 kg at ₹18/kg. Register your crop now!',
+    messageHi: 'इंडस्ट्रियल खरीदार फ्रेशएग्रो ने ₹18/किलो पर 1,00,000 किलो टमाटर की मांग बढ़ाई है। अपनी फसल अभी दर्ज करें!',
     type: 'demand',
     timestamp: '10 mins ago',
+    timestampHi: '10 मिनट पहले',
     read: false,
     actionUrl: 'crops',
+  },
+  {
+    id: 'NOT-102',
+    title: '💰 Payment Received Successfully',
+    titleHi: '💰 भुगतान सफलतापूर्वक प्राप्त हुआ',
+    message: '₹8,40,000 transferred to SBI Bank A/c ****4921 for Tomato transaction.',
+    messageHi: 'टमाटर बिक्री का ₹8,40,000 आपके SBI बैंक खाते ****4921 में जमा कर दिया गया है।',
+    type: 'payment',
+    timestamp: '2 hours ago',
+    timestampHi: '2 घंटे पहले',
+    read: true,
+    actionUrl: 'paycheck',
   },
 ];
 

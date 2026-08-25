@@ -53,7 +53,7 @@ export const LogisticsSidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
+              className={`w-auto md:w-full px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-md font-extrabold'
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'

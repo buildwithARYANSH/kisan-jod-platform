@@ -135,13 +135,97 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const reloadMasterData = () => {
       try {
         const savedFarmers = localStorage.getItem('kisan_admin_farmers_master');
-        if (savedFarmers) setFarmers(JSON.parse(savedFarmers));
+        const registeredFarmers = localStorage.getItem('kisan_registered_farmers');
+        let masterFarmers: MasterFarmer[] = savedFarmers ? JSON.parse(savedFarmers) : [...INITIAL_MASTER_FARMERS];
+        
+        if (registeredFarmers) {
+          const extra: any[] = JSON.parse(registeredFarmers);
+          extra.forEach((ef) => {
+            const efId = ef.id || `FAR-${Date.now()}`;
+            if (!masterFarmers.some((mf) => mf.id === efId || mf.farmerId === efId)) {
+              masterFarmers.unshift({
+                id: efId,
+                farmerId: efId,
+                name: ef.name || 'Registered Farmer',
+                phone: ef.phone || '+91 98000 00000',
+                address: `${ef.village || ''}, ${ef.district || ''} ${ef.state || ''}`.trim() || 'Local Region',
+                region: `${ef.district || ef.village || 'Local'} Hub Region`,
+                assignedAgentId: 'FA-10234',
+                assignedAgentName: 'Ramesh Kumar',
+                assignedFieldAgent: 'AGT-101 (Ramesh Kumar)',
+                registeredDate: ef.registeredDate || new Date().toISOString().split('T')[0],
+                lastActivityDate: ef.registeredDate || new Date().toISOString().split('T')[0],
+                lastActivityTimestamp: ef.registeredDate || new Date().toISOString().split('T')[0],
+                crops: ['Fresh Produce'],
+                bankName: ef.bankName || 'State Bank of India',
+                accountNumberMasked: ef.accountNumber ? `XXXX-XXXX-${String(ef.accountNumber).slice(-4)}` : 'XXXX-XXXX-1234',
+                totalQuantitySupplied: 0,
+                totalQuantitySuppliedKg: 0,
+                pastOrdersCount: 0,
+                activeOrdersCount: 0,
+                completedOrdersCount: 0,
+                disputesCount: 0,
+                paymentStatus: 'Settled',
+                referralSource: 'Direct Farmer Registration',
+                village: ef.village || 'Local Village',
+                district: ef.district || 'Local District',
+                state: ef.state || 'Punjab',
+                registeredCropsCount: 0,
+                totalSoldQuantityKg: 0,
+                totalEarningsINR: 0,
+                registeredDateTimestamp: ef.registeredDate || new Date().toISOString().split('T')[0],
+              } as any);
+            }
+          });
+        }
+        setFarmers(masterFarmers);
+
         const savedCompanies = localStorage.getItem('kisan_admin_companies_master');
-        if (savedCompanies) setCompanies(JSON.parse(savedCompanies));
+        const registeredCompanies = localStorage.getItem('kisan_registered_companies');
+        let masterCompanies: MasterCompany[] = savedCompanies ? JSON.parse(savedCompanies) : [...INITIAL_MASTER_COMPANIES];
+
+        if (registeredCompanies) {
+          const extraC: any[] = JSON.parse(registeredCompanies);
+          extraC.forEach((ec) => {
+            const ecId = ec.id || `COMP-${Date.now()}`;
+            if (!masterCompanies.some((mc) => mc.id === ecId || mc.companyId === ecId)) {
+              masterCompanies.unshift({
+                id: ecId,
+                companyId: ecId,
+                name: ec.companyName || ec.name || 'Registered Company',
+                companyName: ec.companyName || ec.name || 'Registered Company',
+                branch: ec.procurementHub || 'Headquarters',
+                address: ec.registeredAddress || 'Main Industry Zone',
+                email: ec.email || 'corporate@kisanjod.in',
+                phone: ec.phone || '+91 98000 00000',
+                executiveHead: ec.contactPerson || 'Authorized Representative',
+                executivePhone: ec.phone || '+91 98000 00000',
+                executiveEmail: ec.email || 'corporate@kisanjod.in',
+                registrationDate: ec.registeredDate || new Date().toISOString().split('T')[0],
+                lastActivityDate: ec.registeredDate || new Date().toISOString().split('T')[0],
+                lastActivityTimestamp: ec.registeredDate || new Date().toISOString().split('T')[0],
+                totalDemandsCount: 0,
+                activeDemandsCount: 0,
+                completedOrdersCount: 0,
+                totalPurchaseValue: 0,
+                totalPurchaseValueINR: 0,
+                gstin: ec.gstin || '27AAAAA0000A1Z5',
+                procurementHub: ec.procurementHub || 'Regional Hub',
+                contactPerson: ec.contactPerson || 'Authorized Representative',
+                totalProcuredKg: 0,
+                totalSpentINR: 0,
+                registeredDateTimestamp: ec.registeredDate || new Date().toISOString().split('T')[0],
+              } as any);
+            }
+          });
+        }
+        setCompanies(masterCompanies);
       } catch (e) {
         console.warn(e);
       }
     };
+
+    reloadMasterData();
 
     const channel1 = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_shared_sync') : null;
     const channel2 = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('kisan_jod_reactive_channel') : null;
@@ -215,17 +299,23 @@ export const SuperAdminProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setConfig((prev) => ({ ...prev, ...newConfig }));
   };
 
-  // Dynamically calculate 90-day inactivity
+  // Dynamically calculate inactivity threshold
   const isFarmerActive = (farmer: MasterFarmer): boolean => {
-    const lastActive = new Date(farmer.lastActivityTimestamp).getTime();
-    const now = new Date('2026-08-21').getTime();
+    if (!farmer) return false;
+    const ts = farmer.lastActivityTimestamp || farmer.lastActivityDate || farmer.registeredDate || new Date().toISOString().split('T')[0];
+    const lastActive = new Date(ts).getTime();
+    if (isNaN(lastActive)) return true;
+    const now = Date.now();
     const diffDays = (now - lastActive) / (1000 * 3600 * 24);
     return diffDays <= config.inactivityThresholdDays;
   };
 
   const isCompanyActive = (company: MasterCompany): boolean => {
-    const lastActive = new Date(company.lastActivityTimestamp).getTime();
-    const now = new Date('2026-08-21').getTime();
+    if (!company) return false;
+    const ts = company.lastActivityTimestamp || company.lastActivityDate || company.registrationDate || new Date().toISOString().split('T')[0];
+    const lastActive = new Date(ts).getTime();
+    if (isNaN(lastActive)) return true;
+    const now = Date.now();
     const diffDays = (now - lastActive) / (1000 * 3600 * 24);
     return diffDays <= config.inactivityThresholdDays;
   };

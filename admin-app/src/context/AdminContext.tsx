@@ -154,6 +154,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     };
 
+    reloadAgentData();
+
     if (channel) {
       channel.onmessage = (event) => {
         if (event.data?.type === 'CROP_ADDED' || event.data?.type === 'FARMER_REGISTERED') {

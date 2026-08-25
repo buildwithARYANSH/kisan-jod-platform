@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriCore — Enterprise Procurement OS</title>
+
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Lucide Icons & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="relative min-h-screen flex flex-col justify-between selection:bg-emerald-900 selection:text-white">
+
+  <!-- Signature 300-450px Cursor-Reactive Antigravity Particle Canvas (Layer 3) -->
+  <canvas id="cursorInteractionCanvas"></canvas>
+
+  <!-- Layer 1: Living Ambient Sunlight Background -->
+  <div class="living-ambient-sunlight">
+    <div class="ambient-sun-blob-1"></div>
+    <div class="ambient-sun-blob-2"></div>
+  </div>
+
+  <!-- Top Floating Minimal Navigation Header -->
+  <header class="sticky top-3 z-40 px-4 sm:px-8 max-w-7xl mx-auto w-full">
+    <div class="os-nav-pill rounded-full px-4 sm:px-6 py-2 flex items-center justify-between">
+      
+      <!-- Brand, Branch Selector & Integrated Living Clock -->
+      <div class="flex items-center gap-4 sm:gap-5">
+        <div class="flex items-center gap-2.5 cursor-pointer select-none" onclick="switchOSDomain('overview')">
+          <div class="w-6 h-6 rounded-full bg-stone-900 text-white flex items-center justify-center font-serif italic text-xs font-bold">
+            a
+          </div>
+          <span class="font-bold text-sm tracking-tight text-stone-900">AgriCore</span>
+        </div>
+
+        <!-- Multi-Branch Selector Dropdown -->
+        <div class="hidden sm:flex items-center">
+          <select id="branchSelectorSelect" class="branch-pill text-xs focus:outline-none">
+            <option value="ALL">All Branches</option>
+            <option value="BR-DELHI">Delhi-NCR Plant</option>
+            <option value="BR-PUNE">Pune Agro-Hub</option>
+            <option value="BR-BLR">Bengaluru Distribution</option>
+            <option value="BR-MEERUT">Meerut Hub</option>
+          </select>
+        </div>
+
+        <!-- Integrated Clock System -->
+        <div id="livingClockDisplay" class="hidden md:block pl-4 border-l border-stone-200">
+          <!-- Dynamic Clock -->
+        </div>
+      </div>
+
+      <!-- Domain Navigation Tabs -->
+      <nav class="hidden lg:flex items-center gap-1 overflow-x-auto">
+        <a href="#" data-os-nav="overview" class="os-nav-link active">Overview</a>
+        <a href="#" data-os-nav="demand" class="os-nav-link">Demand</a>
+        <a href="#" data-os-nav="procurement" class="os-nav-link">Procurement</a>
+        <a href="#" data-os-nav="orders" class="os-nav-link">Orders</a>
+        <a href="#" data-os-nav="tracking" class="os-nav-link">Tracking</a>
+        <a href="#" data-os-nav="payments" class="os-nav-link">Payments</a>
+        <a href="#" data-os-nav="insights" class="os-nav-link">Insights</a>
+        <a href="#" data-os-nav="disputes" class="os-nav-link">Disputes</a>
+        <a href="#" data-os-nav="reports" class="os-nav-link">Reports</a>
+        <a href="#" data-os-nav="team" class="os-nav-link">Team</a>
+        <a href="#" data-os-nav="company" class="os-nav-link">Company</a>
+      </nav>
+
+      <!-- Right Controls: Search, Notifications, Profile -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Search Shortcut (Ctrl+K) -->
+        <button onclick="toggleCommandPalette()" class="p-1.5 rounded-full text-stone-500 hover:text-stone-900 transition" title="Search (⌘K)">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Notification Drawer Toggle with unread ping -->
+        <button id="notifToggleBtn" class="relative p-1.5 rounded-full text-stone-500 hover:text-stone-900 transition" title="Notifications">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-600"></span>
+        </button>
+
+        <!-- Company Profile Avatar -->
+        <div onclick="switchOSDomain('company')" class="w-6 h-6 rounded-full bg-stone-200 text-stone-800 flex items-center justify-center text-[10px] font-bold font-mono-tight cursor-pointer" title="Vikram Malhotra (ITC Agri)">
+          VM
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport (70% Breathing Space • 20% Info • 10% Controls) -->
+  <main class="relative z-10 flex-1 px-4 sm:px-8 max-w-5xl mx-auto w-full py-6 pb-24">
+    <div id="procurementOSViewport">
+      <!-- Injected dynamically via app.js -->
+    </div>
+  </main>
+
+  <!-- Floating AI Procurement Assistant Widget -->
+  <button id="aiAssistantFloatingBtn" class="ai-assistant-btn">
+    <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+    <span>Ask Assistant</span>
+  </button>
+
+  <!-- AI Procurement Assistant Drawer -->
+  <div id="aiAssistantDrawer">
+    <div class="p-4 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+        <span class="font-bold text-xs text-stone-900">AI Procurement Assistant</span>
+      </div>
+      <button onclick="toggleAIAssistant()" class="text-stone-400 hover:text-stone-900">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="p-4 space-y-3 flex-1 overflow-y-auto">
+      <div id="aiAssistantResponseBox" class="space-y-2">
+        <div class="p-3 rounded-xl bg-stone-100 text-xs text-stone-700">
+          How can I assist your agricultural procurement today? Click any quick prompt below or type your query.
+        </div>
+      </div>
+
+      <div class="space-y-1.5 pt-2 border-t border-stone-100">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-stone-400 block">Suggested Inquiries</span>
+        <button onclick="askAIAssistant('tomato')" class="w-full text-left p-2 rounded-lg bg-stone-50 hover:bg-stone-100 transition text-[11px] text-stone-800">
+          "How much Grade A tomato is currently available?"
+        </button>
+        <button onclick="askAIAssistant('deliveries')" class="w-full text-left p-2 rounded-lg bg-stone-50 hover:bg-stone-100 transition text-[11px] text-stone-800">
+          "Which orders are arriving tomorrow?"
+        </button>
+        <button onclick="askAIAssistant('risk')" class="w-full text-left p-2 rounded-lg bg-stone-50 hover:bg-stone-100 transition text-[11px] text-stone-800">
+          "Which demands are at risk of deficit?"
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multi-Step Demand Creator Wizard Modal -->
+  <div id="demandWizardModal" class="fixed inset-0 z-50 bg-stone-950/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-6 border-b border-stone-100 flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-widest text-emerald-800">New Procurement Requirement</span>
+        <button onclick="closeDemandWizard()" class="p-1 rounded-full text-stone-400 hover:text-stone-900 transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="wizardStepContainer" class="p-8 overflow-y-auto flex-1"></div>
+      <div id="wizardFooterControls" class="p-6 border-t border-stone-100 bg-stone-50/50 flex items-center justify-between"></div>
+    </div>
+  </div>
+
+  <!-- Supply Match Review & Allocation Modal -->
+  <div id="matchReviewModal" class="fixed inset-0 z-50 bg-stone-950/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden p-6">
+      <div id="matchReviewContent"></div>
+    </div>
+  </div>
+
+  <!-- Delivery Inspection & Receipt Confirmation Modal -->
+  <div id="deliveryConfirmModal" class="fixed inset-0 z-50 bg-stone-950/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden p-6">
+      <div id="deliveryConfirmContent"></div>
+    </div>
+  </div>
+
+  <!-- Dispute Reporting Modal -->
+  <div id="disputeReportModal" class="fixed inset-0 z-50 bg-stone-950/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden p-6 space-y-4 text-xs">
+      <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+        <h2 class="text-base font-bold text-stone-900">Report Consignment Dispute</h2>
+        <button onclick="closeDisputeModal()" class="text-stone-400 hover:text-stone-900"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-stone-400 block mb-1">Issue Category</label>
+          <select id="disputeTypeSelect" class="w-full p-2.5 rounded-xl border border-stone-200 bg-white">
+            <option>Quantity Weighbridge Variance</option>
+            <option>Quality Grade Spec Non-Compliance</option>
+            <option>Transit Spoilage / Moisture Deviation</option>
+            <option>Delayed Freight Delivery</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-stone-400 block mb-1">Purchase Order Reference</label>
+          <input type="text" id="disputeOrderInput" value="AG-2048" class="w-full p-2.5 rounded-xl border border-stone-200 font-mono-tight">
+        </div>
+        <div>
+          <label class="text-stone-400 block mb-1">Detailed Description of Discrepancy</label>
+          <textarea id="disputeDescInput" rows="3" class="w-full p-2.5 rounded-xl border border-stone-200" placeholder="Provide weighbridge ticket numbers or inspection observations..."></textarea>
+        </div>
+      </div>
+      <div class="pt-3 border-t border-stone-100 flex items-center justify-between">
+        <button onclick="closeDisputeModal()" class="btn-editorial-secondary text-xs">Cancel</button>
+        <button onclick="submitDisputeForm()" class="btn-editorial-primary text-xs bg-rose-900 text-white">Submit Official Claim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Drawer -->
+  <div id="notificationDrawer">
+    <div class="p-6 border-b border-stone-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-stone-900">Procurement Activity</h2>
+        <span class="text-xs text-stone-400 font-mono-tight">Real-time system events</span>
+      </div>
+      <button onclick="closeNotificationDrawer()" class="p-1 rounded-full text-stone-400 hover:text-stone-900">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="notificationListContainer" class="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-80px)]"></div>
+  </div>
+
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="cmdPaletteModal" class="fixed inset-0 z-50 bg-stone-950/40 backdrop-blur-sm hidden flex items-start justify-center pt-24 px-4">
+    <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden">
+      <div class="p-4 border-b border-stone-100 flex items-center gap-3">
+        <i data-lucide="search" class="w-4 h-4 text-stone-400"></i>
+        <input type="text" placeholder="Search demands, orders, shipments, batches, invoices..." class="w-full text-xs bg-transparent focus:outline-none text-stone-900">
+        <button onclick="closeCommandPalette()" class="text-[10px] text-stone-400 font-mono-tight px-1.5 py-0.5 rounded border border-stone-200">ESC</button>
+      </div>
+      <div class="p-3 text-xs space-y-1">
+        <div onclick="switchOSDomain('demand'); closeCommandPalette();" class="p-2.5 rounded-xl hover:bg-stone-100 transition cursor-pointer flex justify-between items-center">
+          <span>Wheat (Sharbati) — 420 MT Demand (75% Covered)</span>
+          <span class="text-[10px] font-mono-tight text-emerald-700">Demand</span>
+        </div>
+        <div onclick="switchOSDomain('tracking'); closeCommandPalette();" class="p-2.5 rounded-xl hover:bg-stone-100 transition cursor-pointer flex justify-between items-center">
+          <span>Truck HR-05-BC-7892 (250 MT Basmati, In Transit)</span>
+          <span class="text-[10px] font-mono-tight text-blue-600">Tracking</span>
+        </div>
+        <div onclick="switchOSDomain('orders'); closeCommandPalette();" class="p-2.5 rounded-xl hover:bg-stone-100 transition cursor-pointer flex justify-between items-center">
+          <span>Order #AG-2038 (Nashik Red Onion, Delivered)</span>
+          <span class="text-[10px] font-mono-tight text-stone-500">Orders</span>
+        </div>
+        <div onclick="switchOSDomain('payments'); closeCommandPalette();" class="p-2.5 rounded-xl hover:bg-stone-100 transition cursor-pointer flex justify-between items-center">
+          <span>₹4.82 Cr YTD Sourcing Settlement</span>
+          <span class="text-[10px] font-mono-tight text-emerald-600">Payments</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal Footer -->
+  <footer class="relative z-10 py-5 px-8 max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 font-light border-t border-stone-200/50 gap-2">
+    <div>ITC Agribusiness & Consumer Foods Ltd. • Autonomous Enterprise Procurement OS</div>
+    <div class="font-mono-tight text-[11px]">100% Farm-Gate Traceability • NABL Lab Verified • Real-Time GPS Telemetry</div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="mockData.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

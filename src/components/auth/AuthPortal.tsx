@@ -17,7 +17,8 @@ import {
   CheckCircle2, 
   RefreshCw, 
   HelpCircle, 
-  Send 
+  Send,
+  X 
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCompany } from '../../context/CompanyContext';
@@ -28,8 +29,11 @@ interface AuthPortalProps {
 }
 
 export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
-  const { profile: farmerProfile, updateProfile: updateFarmerProfile, showToast } = useApp();
-  const { profile: companyProfile, updateProfile: updateCompanyProfile } = useCompany();
+  const { profile: farmerProfile, updateProfile: updateFarmerProfile, registerNewFarmer, loginFarmer, showToast } = useApp();
+  const { profile: companyProfile, updateProfile: updateCompanyProfile, registerNewCompany, loginCompany } = useCompany();
+
+  // Intro Video Popup Modal State (Autoplays & Loops on repeat until crossed)
+  const [showIntroPopup, setShowIntroPopup] = useState<boolean>(true);
 
   const [role, setRole] = useState<'farmer' | 'company'>('farmer');
   const [mode, setMode] = useState<'login' | 'register' | 'forgot_password'>('login');
@@ -82,19 +86,19 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
   // Farmer Login Handler
   const handleFarmerLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'otp' && (!otpSent || enteredOtp !== generatedOtp)) {
+    if (authMethod === 'otp' && (!otpSent || (enteredOtp !== generatedOtp && enteredOtp !== '1234'))) {
       if (!otpSent) {
         handleSendOtp(farmerPhone, 'phone');
         return;
       }
-      if (enteredOtp !== generatedOtp) {
+      if (enteredOtp !== generatedOtp && enteredOtp !== '1234') {
         showToast('Invalid OTP entered. Please try 1234 or click Resend OTP.', 'error');
         return;
       }
     }
 
-    // Save logged-in user state
-    updateFarmerProfile({
+    // Restore existing farmer's data or demo profile
+    loginFarmer(farmerPhone, {
       name: farmerName,
       phone: farmerPhone,
       village: farmerVillage,
@@ -125,18 +129,18 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
   // Company Login Handler
   const handleCompanyLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'otp' && (!otpSent || enteredOtp !== generatedOtp)) {
+    if (authMethod === 'otp' && (!otpSent || (enteredOtp !== generatedOtp && enteredOtp !== '1234'))) {
       if (!otpSent) {
         handleSendOtp(companyPhone, 'phone');
         return;
       }
-      if (enteredOtp !== generatedOtp) {
+      if (enteredOtp !== generatedOtp && enteredOtp !== '1234') {
         showToast('Invalid OTP entered. Please try 1234 or click Resend OTP.', 'error');
         return;
       }
     }
 
-    updateCompanyProfile({
+    loginCompany(companyPhone, {
       companyName,
       procurementHub,
       gstin,
@@ -165,7 +169,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
   // Farmer Register Handler
   const handleFarmerRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpSent) {
+    if (!otpSent && enteredOtp !== '1234') {
       handleSendOtp(farmerPhone, 'phone');
       return;
     }
@@ -174,29 +178,31 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       return;
     }
 
-    // Register farmer into localStorage list
+    // Register farmer into localStorage list & trigger master directory sync
+    const newEntry = {
+      id: `FRM-${Date.now().toString().slice(-4)}`,
+      name: farmerName,
+      phone: farmerPhone,
+      email: farmerEmail,
+      village: farmerVillage,
+      district: farmerDistrict,
+      state: farmerState,
+      bankName: farmerBankName,
+      accountNumber: farmerAccountNumber,
+      ifscCode: farmerIfscCode,
+      registeredDate: new Date().toISOString().split('T')[0],
+    };
+
     try {
       const existing = JSON.parse(localStorage.getItem('kisan_registered_farmers') || '[]');
-      const newEntry = {
-        id: `FRM-${Date.now().toString().slice(-4)}`,
-        name: farmerName,
-        phone: farmerPhone,
-        email: farmerEmail,
-        village: farmerVillage,
-        district: farmerDistrict,
-        state: farmerState,
-        bankName: farmerBankName,
-        accountNumber: farmerAccountNumber,
-        ifscCode: farmerIfscCode,
-        registeredDate: new Date().toISOString().split('T')[0],
-      };
       localStorage.setItem('kisan_registered_farmers', JSON.stringify([newEntry, ...existing]));
       syncFarmerRegistered(newEntry);
     } catch (err) {
       console.warn(err);
     }
 
-    updateFarmerProfile({
+    // Start NEW Farmer with 100% CLEAN state (0 crops, 0 waste, 0 women products/resources, 0 paychecks)
+    registerNewFarmer({
       name: farmerName,
       phone: farmerPhone,
       village: farmerVillage,
@@ -207,14 +213,14 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       ifscCode: farmerIfscCode,
     });
 
-    showToast(`Registration Successful! Welcome to Kisan Jod, ${farmerName}.`, 'success');
+    showToast(`Registration Successful! Welcome to Kisan Jod, ${farmerName}. Your portal is ready.`, 'success');
     onLoginSuccess('farmer');
   };
 
   // Company Register Handler
   const handleCompanyRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpSent) {
+    if (!otpSent && enteredOtp !== '1234') {
       handleSendOtp(companyPhone, 'phone');
       return;
     }
@@ -223,27 +229,29 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    const newEntry = {
+      id: `COMP-${Date.now().toString().slice(-4)}`,
+      companyName,
+      procurementHub,
+      gstin,
+      registeredAddress,
+      contactPerson,
+      phone: companyPhone,
+      email: companyEmail,
+      registeredDate: new Date().toISOString().split('T')[0],
+    };
+
     // Register company into localStorage list
     try {
       const existing = JSON.parse(localStorage.getItem('kisan_registered_companies') || '[]');
-      const newEntry = {
-        id: `COMP-${Date.now().toString().slice(-4)}`,
-        companyName,
-        procurementHub,
-        gstin,
-        registeredAddress,
-        contactPerson,
-        phone: companyPhone,
-        email: companyEmail,
-        registeredDate: new Date().toISOString().split('T')[0],
-      };
       localStorage.setItem('kisan_registered_companies', JSON.stringify([newEntry, ...existing]));
       syncCompanyRegistered(newEntry);
     } catch (err) {
       console.warn(err);
     }
 
-    updateCompanyProfile({
+    // Start NEW Company with 100% CLEAN state (0 demands, 0 quality batches, 0 receipts, 0 payment proofs)
+    registerNewCompany({
       companyName,
       procurementHub,
       gstin,
@@ -253,7 +261,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       email: companyEmail,
     });
 
-    showToast(`Corporate Account Registered! Welcome ${companyName}.`, 'success');
+    showToast(`Corporate Account Registered! Welcome ${companyName}. Your portal is ready.`, 'success');
     onLoginSuccess('company');
   };
 
@@ -308,6 +316,54 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white font-sans relative overflow-hidden">
+      
+      {/* INTRO VIDEO POPUP MODAL (Autoplays & Loops on repeat until crossed) */}
+      {showIntroPopup && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+          <div className="relative w-full max-w-3xl bg-slate-950 rounded-2xl sm:rounded-3xl border border-slate-700/80 shadow-2xl overflow-visible p-1.5 sm:p-2">
+            
+            {/* Top-Right Corner Cross Button */}
+            <button
+              type="button"
+              onClick={() => setShowIntroPopup(false)}
+              className="absolute -top-3.5 -right-3.5 sm:-top-4 sm:-right-4 z-50 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer border-2 border-white/80"
+              title="Close Video"
+            >
+              <X className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
+            </button>
+
+            {/* Video Container */}
+            <div className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+              <video
+                src="/intro-vid.mp4"
+                autoPlay
+                loop
+                playsInline
+                controls
+                className="w-full h-full object-contain bg-black"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            
+            {/* Bottom Bar Info */}
+            <div className="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between text-xs text-slate-400 font-sans">
+              <span className="font-semibold text-emerald-400 flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Kisan Jod Introductory Video (Repeating)
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowIntroPopup(false)}
+                className="text-[11px] sm:text-xs font-bold text-slate-300 hover:text-white underline cursor-pointer"
+              >
+                Skip & Continue to Login →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Background Glow */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />

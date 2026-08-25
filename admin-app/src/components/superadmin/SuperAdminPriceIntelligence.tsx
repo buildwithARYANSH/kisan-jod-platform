@@ -1,5 +1,6 @@
 import React from 'react';
 import { Scale, BrainCircuit, CheckCircle2, TrendingUp } from 'lucide-react';
+import { PayoutCorridorCard } from '../PayoutCorridorCard';
 
 export const SuperAdminPriceIntelligence: React.FC = () => {
   return (
@@ -14,6 +15,9 @@ export const SuperAdminPriceIntelligence: React.FC = () => {
           Recommended fair procurement price range output balancing buyer demand, supply availability, quality, seasonality & operational costs.
         </p>
       </div>
+
+      {/* Recommended Farmer Payout Corridor Component (Agmarknet API) */}
+      <PayoutCorridorCard />
 
       {/* AI Range Card */}
       <div className="bg-gradient-to-b from-purple-500/10 via-indigo-500/5 to-white  border-2 border-purple-500 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">

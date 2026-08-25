@@ -60,48 +60,224 @@ import { ShieldCheck, Crown, Truck, LogOut } from 'lucide-react';
 
 type PersonaType = 'super-admin' | 'middleman' | 'logistics';
 
-// Field Agent Shell
+// Field Agent Shell - Kisan Jod Earn Mobile-First Interface
 const MiddlemanMainContent: React.FC<{ onSwitchPersona?: (p: PersonaType) => void; onLogout: () => void }> = ({ onLogout }) => {
-  const { activeSection } = useAdmin();
+  const { activeSection, setActiveSection, unreadCount, profile, language, setLanguage } = useAdmin();
+  const [isLanguageSheetOpen, setIsLanguageSheetOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (text: string) => {
+    setToastMessage(text);
+    setTimeout(() => setToastMessage(null), 2800);
+  };
+
+  const navItems: { id: AdminNavSection; label: string; icon: string }[] = [
+    { id: 'dashboard', label: 'घर', icon: '⌂' },
+    { id: 'daily-tasks', label: 'काम', icon: '✓' },
+    { id: 'farmers', label: 'किसान', icon: '♙' },
+    { id: 'inventory', label: 'कामकाज', icon: '▣' },
+    { id: 'profile', label: 'और', icon: '•••' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-purple-50/20 to-indigo-50/30 text-slate-900 flex flex-col font-sans selection:bg-purple-600 selection:text-white">
-      <div className="bg-gradient-to-r from-purple-100 via-indigo-100 to-purple-50 text-purple-950 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs font-bold border-b border-purple-200/80 shadow-xs font-sans">
-        <span className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-purple-700" />
-          Middleman & Field Agent Operations Desk — Running on Port 5174
-        </span>
+    <div className="shell selection:bg-[#1f6a45] selection:text-white">
+      {/* Top Header */}
+      <header className="topbar">
+        <div>
+          <div className="greeting">नमस्ते, {profile?.name || 'अमित कुमार'}</div>
+          <div className="identity">एजेंट आईडी · {profile?.employeeId || 'AGT1256'}</div>
+        </div>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onLogout}
-            className="px-3 py-1 rounded-lg text-xs font-extrabold cursor-pointer transition-all bg-red-100 hover:bg-red-200 text-red-900 border border-red-300 shadow-xs flex items-center gap-1"
+        <div className="top-actions">
+          <select
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'logout') {
+                onLogout();
+              } else if (onSwitchPersona) {
+                onSwitchPersona(val as PersonaType);
+              }
+            }}
+            className="border border-[#e7e7df] bg-white h-[39px] rounded-[14px] px-2 text-[11px] font-extrabold text-[#1f6a45] cursor-pointer shadow-xs"
+            defaultValue="middleman"
+            title="Switch Portal or Logout"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Logout</span>
+            <option value="middleman">🌾 Middleman</option>
+            <option value="super-admin">👑 Super-Admin</option>
+            <option value="logistics">🚛 Logistics</option>
+            <option value="logout">🔒 Login Page / Logout</option>
+          </select>
+
+          <button
+            className="icon-btn"
+            onClick={() => {
+              setActiveSection('notifications');
+              showToast(`${unreadCount || 4} नई सूचनाएं हैं`);
+            }}
+            title="Notifications"
+          >
+            ◉<em className="dot">{unreadCount || 4}</em>
+          </button>
+
+          <button
+            className="language"
+            onClick={() => setIsLanguageSheetOpen(true)}
+            title="Change Language"
+          >
+            {language === 'hi' ? 'हिंदी' : 'English'}
           </button>
         </div>
-      </div>
+      </header>
 
-      <AdminTopNav />
+      {/* Screen Body */}
+      <section className="screen">
+        {activeSection === 'dashboard' && <AdminDashboard />}
+        {activeSection === 'daily-tasks' && <AdminDailyTasks />}
+        {activeSection === 'farmers' && <AdminFarmers />}
+        {(activeSection === 'inventory' || activeSection === 'orders' || activeSection === 'dispatch') && (
+          <div className="space-y-4">
+            <div className="screen-head">
+              <div>
+                <h1>कामकाज</h1>
+                <p>इन्वेंटरी, ऑर्डर और डिस्पैच</p>
+              </div>
+            </div>
+            <div className="operation-tabs">
+              <button
+                className={activeSection === 'inventory' ? 'active' : ''}
+                onClick={() => setActiveSection('inventory')}
+              >
+                इन्वेंटरी
+              </button>
+              <button
+                className={activeSection === 'orders' ? 'active' : ''}
+                onClick={() => setActiveSection('orders')}
+              >
+                ऑर्डर
+              </button>
+              <button
+                className={activeSection === 'dispatch' ? 'active' : ''}
+                onClick={() => setActiveSection('dispatch')}
+              >
+                डिस्पैच
+              </button>
+            </div>
+            {activeSection === 'inventory' && <AdminInventory />}
+            {activeSection === 'orders' && <AdminOrders />}
+            {activeSection === 'dispatch' && <AdminDispatch />}
+          </div>
+        )}
+        {(activeSection === 'profile' ||
+          activeSection === 'rating' ||
+          activeSection === 'referrals' ||
+          activeSection === 'task-history' ||
+          activeSection === 'report-issue' ||
+          activeSection === 'notifications') && (
+          <div className="space-y-4 font-sans">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+              <button
+                onClick={() => setActiveSection('profile')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer ${
+                  activeSection === 'profile' ? 'bg-[#1f6a45] text-white' : 'bg-white text-[#718076] border border-[#e7e7df]'
+                }`}
+              >
+                मेरा प्रोफाइल
+              </button>
+              <button
+                onClick={() => setActiveSection('rating')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer ${
+                  activeSection === 'rating' ? 'bg-[#1f6a45] text-white' : 'bg-white text-[#718076] border border-[#e7e7df]'
+                }`}
+              >
+                रेटिंग
+              </button>
+              <button
+                onClick={() => setActiveSection('referrals')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer ${
+                  activeSection === 'referrals' ? 'bg-[#1f6a45] text-white' : 'bg-white text-[#718076] border border-[#e7e7df]'
+                }`}
+              >
+                कमाई और रेफरल
+              </button>
+              <button
+                onClick={() => setActiveSection('task-history')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer ${
+                  activeSection === 'task-history' ? 'bg-[#1f6a45] text-white' : 'bg-white text-[#718076] border border-[#e7e7df]'
+                }`}
+              >
+                हिस्ट्री
+              </button>
+              <button
+                onClick={() => setActiveSection('report-issue')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer ${
+                  activeSection === 'report-issue' ? 'bg-[#1f6a45] text-white' : 'bg-white text-[#718076] border border-[#e7e7df]'
+                }`}
+              >
+                मदद / समस्या
+              </button>
+            </div>
+            {activeSection === 'profile' && <AdminProfileView onLogout={onLogout} />}
+            {activeSection === 'rating' && <AdminRating />}
+            {activeSection === 'referrals' && <AdminReferrals />}
+            {activeSection === 'notifications' && <AdminNotifications />}
+            {activeSection === 'task-history' && <AdminTaskHistory />}
+            {activeSection === 'report-issue' && <AdminReportIssue />}
+          </div>
+        )}
+      </section>
 
-      <div className="flex-1 max-w-7xl w-full mx-auto flex flex-col md:flex-row gap-4 p-4">
-        <AdminSidebar />
-        <main className="flex-1 min-w-0">
-          {activeSection === 'dashboard' && <AdminDashboard />}
-          {activeSection === 'daily-tasks' && <AdminDailyTasks />}
-          {activeSection === 'farmers' && <AdminFarmers />}
-          {activeSection === 'inventory' && <AdminInventory />}
-          {activeSection === 'orders' && <AdminOrders />}
-          {activeSection === 'dispatch' && <AdminDispatch />}
-          {activeSection === 'rating' && <AdminRating />}
-          {activeSection === 'referrals' && <AdminReferrals />}
-          {activeSection === 'notifications' && <AdminNotifications />}
-          {activeSection === 'task-history' && <AdminTaskHistory />}
-          {activeSection === 'report-issue' && <AdminReportIssue />}
-          {activeSection === 'profile' && <AdminProfileView />}
-        </main>
-      </div>
+      {/* Bottom Fixed Navigation Bar */}
+      <nav className="bottomnav">
+        {navItems.map((n) => {
+          const isActive =
+            activeSection === n.id ||
+            (n.id === 'inventory' && (activeSection === 'orders' || activeSection === 'dispatch')) ||
+            (n.id === 'profile' &&
+              (activeSection === 'rating' ||
+                activeSection === 'referrals' ||
+                activeSection === 'task-history' ||
+                activeSection === 'report-issue' ||
+                activeSection === 'notifications'));
+
+          return (
+            <button
+              key={n.id}
+              className={`nav ${isActive ? 'active' : ''}`}
+              onClick={() => setActiveSection(n.id)}
+            >
+              <b>{n.icon}</b>
+              <span>{n.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Language Bottom Sheet Modal */}
+      {isLanguageSheetOpen && (
+        <div className="sheet show" onClick={() => setIsLanguageSheetOpen(false)}>
+          <div className="sheet-box" onClick={(e) => e.stopPropagation()}>
+            <h2>अपनी भाषा चुनें</h2>
+            <p>पूरे वेबसाइट का कंटेंट तुरंत बदलेगा।</p>
+            <div className="language-grid">
+              {['हिंदी', 'English', 'मराठी', 'ગુજરાતી', 'ਪੰਜਾਬੀ', 'বাংলা'].map((langName) => (
+                <button
+                  key={langName}
+                  onClick={() => {
+                    setLanguage(langName.toLowerCase().includes('eng') ? 'en' : 'hi');
+                    setIsLanguageSheetOpen(false);
+                    showToast(`${langName} भाषा चुनी गई`);
+                  }}
+                >
+                  {langName}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && <div className="toast show">{toastMessage}</div>}
 
       <AdminVoiceModal />
       <AdminVoiceConfirmModal />
@@ -210,24 +386,13 @@ const LogisticsMainContent: React.FC<{ onSwitchPersona?: (p: PersonaType) => voi
 };
 
 function AdminAppContent() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem('kisan_admin_session_active') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   const [currentPersona, setCurrentPersona] = useState<PersonaType>('middleman');
 
   const handleLoginSuccess = (persona: PersonaType) => {
     setCurrentPersona(persona);
     setIsLoggedIn(true);
-    try {
-      sessionStorage.setItem('kisan_admin_session_active', 'true');
-    } catch (e) {
-      console.warn(e);
-    }
   };
 
   const handleLogout = () => {

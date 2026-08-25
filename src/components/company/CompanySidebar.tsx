@@ -79,7 +79,7 @@ export const CompanySidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full px-4 py-3 rounded-2xl font-extrabold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
+              className={`w-auto md:w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl font-extrabold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
                 isActive
                   ? 'bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md scale-102'
                   : 'text-slate-800 hover:bg-blue-50/80 hover:text-blue-900'

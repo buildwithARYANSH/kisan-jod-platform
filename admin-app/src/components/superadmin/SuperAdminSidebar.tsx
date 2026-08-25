@@ -69,7 +69,7 @@ export const SuperAdminSidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
+              className={`w-auto md:w-full px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 ${
                 isActive
                   ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md font-extrabold'
                   : 'text-slate-700 hover:bg-amber-50 hover:text-amber-950 font-bold'

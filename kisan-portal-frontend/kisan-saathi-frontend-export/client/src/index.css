@@ -1,0 +1,66 @@
+/** Courtyard Companion global system: paper warmth, Saathi Green trust, and large touch-safe surfaces. */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Baloo 2", "Noto Sans Devanagari", sans-serif;
+  --font-sans: "Noto Sans Devanagari", system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root { --radius: 0.9rem; --background: #FBF8EE; --foreground: #223124; --card: #FFFEF8; --card-foreground: #223124; --popover: #FFFEF8; --popover-foreground: #223124; --primary: #146B3A; --primary-foreground: #FFFFFF; --secondary: #F3E7C9; --secondary-foreground: #4E3B1F; --muted: #F0EEE5; --muted-foreground: #627066; --accent: #EAF6E4; --accent-foreground: #1E5E35; --destructive: #C95839; --destructive-foreground: #FFFFFF; --border: #E7E0D2; --input: #E7E0D2; --ring: #E3A848; }
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { background: #FBF8EE; }
+  body { @apply bg-background text-foreground font-sans; }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [type="button"]:not(:disabled), [type="submit"]:not(:disabled), [type="reset"]:not(:disabled), a[href], select:not(:disabled), input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled) { @apply cursor-pointer; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer components {
+  .container { width: 100%; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+  .flex { min-height: 0; min-width: 0; }
+  .eyebrow { color: #A36C21; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+  .nav-item { display: flex; min-width: 54px; flex-direction: column; align-items: center; gap: 0.16rem; color: #778579; font-size: 0.65rem; font-weight: 700; line-height: 1.1; }
+  .nav-item.active { color: #176A3A; }
+  .hide-scrollbar { scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .sheet-enter { animation: sheet-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+  .hero-panel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle at 80% 15%, rgba(251, 224, 144, .16) 0 2px, transparent 3px), radial-gradient(circle at 70% 70%, rgba(255,255,255,.10) 0 1px, transparent 2px); background-size: 34px 34px, 22px 22px; opacity: .5; }
+  .courtyard-welcome { background-image: linear-gradient(135deg, rgba(112, 54, 35, .18), transparent 55%), radial-gradient(circle at 14% 82%, rgba(255, 240, 194, .18), transparent 38%); }
+  .courtyard-contour { position: absolute; border: 2px solid rgba(255, 236, 185, .54); border-radius: 48% 52% 44% 56% / 42% 57% 43% 58%; pointer-events: none; }
+  .courtyard-contour-one { bottom: -48px; right: 17%; width: 220px; height: 104px; transform: rotate(-12deg); }
+  .courtyard-contour-two { bottom: -24px; right: 9%; width: 175px; height: 74px; transform: rotate(-11deg); border-color: rgba(126, 59, 40, .45); }
+  .voice-ripple::before, .voice-ripple::after { content: ""; position: absolute; inset: -9px; border-radius: inherit; border: 1px solid rgba(255, 240, 194, .68); }
+  .voice-ripple::after { inset: -18px; border-color: rgba(219, 236, 245, .44); }
+  @keyframes sheet-in { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
+  @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+}

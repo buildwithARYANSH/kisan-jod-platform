@@ -1,0 +1,350 @@
+/* ==========================================================================
+   AgriCore — Enterprise Procurement OS Master Stylesheet
+   Architecture: Living Procurement Workspace • 3-Layer Depth
+   Cursor-Reactive Antigravity Ambient System (300-450px Radius)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ==========================================================================
+   PRIMARY LIGHT THEME DESIGN TOKENS
+   Warm Off-White • Soft Stone • Light Beige • Natural Forest Green • Charcoal
+   ========================================================================== */
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Refined Natural Palette */
+  --bg-app: #faf8f5;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f2eee9;
+  --bg-elevated: #ffffff;
+  --bg-floating: rgba(255, 255, 255, 0.94);
+
+  --border-subtle: rgba(24, 24, 27, 0.07);
+  --border-strong: rgba(24, 24, 27, 0.14);
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+
+  --accent-forest: #14532d;
+  --accent-forest-hover: #166534;
+  --accent-forest-subtle: rgba(20, 83, 45, 0.08);
+  --accent-gold: #d97706;
+  --accent-blue: #2563eb;
+  --accent-rose: #e11d48;
+
+  --sunlight-glow: rgba(217, 119, 6, 0.04);
+  --shadow-soft: 0 4px 20px -2px rgba(24, 24, 27, 0.04);
+  --shadow-float: 0 20px 40px -10px rgba(24, 24, 27, 0.08);
+}
+
+/* Base reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+.font-mono-tight {
+  font-family: var(--font-mono);
+  letter-spacing: -0.03em;
+}
+
+/* ==========================================================================
+   CURSOR-REACTIVE ANTIGRAVITY PARTICLE CANVAS (300-450PX RADIUS)
+   ========================================================================== */
+#cursorInteractionCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+}
+
+.living-ambient-sunlight {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-sun-blob-1 {
+  position: absolute;
+  top: -15%;
+  right: 12%;
+  width: 750px;
+  height: 750px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sunlight-glow) 0%, rgba(217, 119, 6, 0) 70%);
+  filter: blur(95px);
+  animation: sunDrift 30s ease-in-out infinite alternate;
+}
+
+.ambient-sun-blob-2 {
+  position: absolute;
+  bottom: 0%;
+  left: 6%;
+  width: 650px;
+  height: 650px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-forest-subtle) 0%, rgba(0, 0, 0, 0) 70%);
+  filter: blur(100px);
+  animation: forestPulse 25s ease-in-out infinite alternate;
+}
+
+@keyframes sunDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-80px, 50px) scale(1.1); }
+  100% { transform: translate(50px, -40px) scale(0.95); }
+}
+
+@keyframes forestPulse {
+  0% { transform: translate(0, 0) scale(0.9); opacity: 0.5; }
+  100% { transform: translate(60px, -50px) scale(1.15); opacity: 0.85; }
+}
+
+/* ==========================================================================
+   NAVIGATION BAR & BRANCH SWITCHER
+   ========================================================================== */
+.os-nav-pill {
+  background: var(--bg-floating);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+}
+
+.os-nav-link {
+  position: relative;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.os-nav-link:hover {
+  color: var(--text-primary);
+}
+.os-nav-link.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Branch Selector Pill */
+.branch-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.branch-pill:hover {
+  border-color: var(--border-strong);
+}
+
+/* ==========================================================================
+   BUTTONS & EDITORIAL CONTROLS
+   ========================================================================== */
+.btn-editorial-primary {
+  background: var(--text-primary);
+  color: var(--bg-app);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.65rem 1.4rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  cursor: pointer;
+}
+.btn-editorial-primary:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-editorial-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.btn-editorial-secondary:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-primary);
+}
+
+/* ==========================================================================
+   EXPANDABLE PROCUREMENT ROWS
+   ========================================================================== */
+.procure-row-card {
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.procure-row-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+.procure-row-card.expanded {
+  border-color: var(--text-primary);
+  box-shadow: var(--shadow-float);
+}
+
+/* ==========================================================================
+   TRACKING DOMAIN — LIGHT MAP & PHYSICALLY MOVING TRUCK
+   ========================================================================== */
+#trackingMapContainer {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(20, 83, 45, 0.03) 0%, transparent 80%), var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+}
+
+.truck-floating-capsule {
+  position: absolute;
+  pointer-events: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-float);
+  border-radius: 1rem;
+  padding: 0.85rem 1.15rem;
+  font-size: 0.75rem;
+  z-index: 25;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate(-50%, -130%);
+}
+
+/* ==========================================================================
+   AI PROCUREMENT ASSISTANT FLOATING WIDGET
+   ========================================================================== */
+.ai-assistant-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 45;
+  background: var(--text-primary);
+  color: var(--bg-app);
+  padding: 0.75rem 1.25rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-float);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ai-assistant-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+#aiAssistantDrawer {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.5rem;
+  width: 380px;
+  max-width: calc(100vw - 3rem);
+  background: var(--bg-surface);
+  border-radius: 1.5rem;
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-float);
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#aiAssistantDrawer.open {
+  display: flex;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   NOTIFICATION DRAWER
+   ========================================================================== */
+#notificationDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-float);
+  z-index: 60;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#notificationDrawer.open {
+  transform: translateX(0);
+}
+
+/* Accessible clean scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
