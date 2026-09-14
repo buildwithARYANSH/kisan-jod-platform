@@ -18,14 +18,15 @@ import {
   RefreshCw, 
   HelpCircle, 
   Send,
-  X 
+  X,
+  Truck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useCompany } from '../../context/CompanyContext';
 import { syncFarmerRegistered, syncCompanyRegistered } from '../../services/unifiedSync';
 
 interface AuthPortalProps {
-  onLoginSuccess: (role: 'farmer' | 'company') => void;
+  onLoginSuccess: (role: 'farmer' | 'company' | 'agent' | 'logistics' | 'admin') => void;
 }
 
 export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
@@ -35,7 +36,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
   // Intro Video Popup Modal State (Autoplays & Loops on repeat until crossed)
   const [showIntroPopup, setShowIntroPopup] = useState<boolean>(true);
 
-  const [role, setRole] = useState<'farmer' | 'company'>('farmer');
+  const [role, setRole] = useState<'farmer' | 'company' | 'agent' | 'logistics' | 'admin'>('farmer');
   const [mode, setMode] = useState<'login' | 'register' | 'forgot_password'>('login');
   const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
 
@@ -72,6 +73,20 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
   const [registeredAddress, setRegisteredAddress] = useState(companyProfile.registeredAddress || 'Plot 42, Focal Point Industrial Zone, Ludhiana, Punjab - 141010');
   const [contactPerson, setContactPerson] = useState(companyProfile.contactPerson || 'Vikram Malhotra (Head of Procurement)');
   const [companyEmail, setCompanyEmail] = useState(companyProfile.email || 'procurement@freshagro.co.in');
+
+  // Field Agent Login Form State
+  const [agentPhone, setAgentPhone] = useState('+91 98765 22104');
+  const [agentPassword, setAgentPassword] = useState('agent123');
+  const [agentName, setAgentName] = useState('Arun Khot');
+
+  // Logistics Login Form State
+  const [logisticsPhone, setLogisticsPhone] = useState('+91 98450 11223');
+  const [logisticsPassword, setLogisticsPassword] = useState('fleet123');
+  const [logisticsName, setLogisticsName] = useState('North India Agro Logistics & Freight');
+
+  // Admin Login State
+  const [adminPhone, setAdminPhone] = useState('+91 99999 00000');
+  const [adminPassword, setAdminPassword] = useState('admin9999');
 
   // Send OTP Action
   const handleSendOtp = (recipient: string, type: 'phone' | 'email') => {
@@ -164,6 +179,51 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
 
     showToast(`Logged in successfully as Company (${companyName})`, 'success');
     onLoginSuccess('company');
+  };
+
+  // Field Agent Login Handler
+  const handleAgentLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMethod === 'otp' && (!otpSent || (enteredOtp !== generatedOtp && enteredOtp !== '1234'))) {
+      if (!otpSent) {
+        handleSendOtp(agentPhone, 'phone');
+        return;
+      }
+      if (enteredOtp !== generatedOtp && enteredOtp !== '1234') {
+        showToast('Invalid OTP entered. Please try 1234 or click Resend OTP.', 'error');
+        return;
+      }
+    }
+    showToast(`Logged in successfully as Field Officer (${agentName})`, 'success');
+    onLoginSuccess('agent');
+  };
+
+  // Logistics Login Handler
+  const handleLogisticsLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMethod === 'otp' && (!otpSent || (enteredOtp !== generatedOtp && enteredOtp !== '1234'))) {
+      if (!otpSent) {
+        handleSendOtp(logisticsPhone, 'phone');
+        return;
+      }
+      if (enteredOtp !== generatedOtp && enteredOtp !== '1234') {
+        showToast('Invalid OTP entered. Please try 1234 or click Resend OTP.', 'error');
+        return;
+      }
+    }
+    showToast(`Logged in successfully as Logistics Partner (${logisticsName})`, 'success');
+    onLoginSuccess('logistics');
+  };
+
+  // Admin Login Handler
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPassword !== 'admin9999' && adminPassword !== 'kisan123') {
+      showToast('Invalid Admin Master Passkey. Try: admin9999', 'error');
+      return;
+    }
+    showToast('Executive Admin Access Granted', 'success');
+    onLoginSuccess('admin');
   };
 
   // Farmer Register Handler
@@ -301,8 +361,8 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       setFarmerIfscCode('SBIN0001234');
       setEnteredOtp('1234');
       setOtpSent(true);
-      showToast('Autofilled default single-entity Farmer credentials (Gurdev Singh)', 'info');
-    } else {
+      showToast('Autofilled Farmer credentials (Gurdev Singh)', 'info');
+    } else if (role === 'company') {
       setCompanyName('FreshAgro Foods & Bio-Processing Pvt Ltd');
       setCompanyPhone('+91 98112 34567');
       setProcurementHub('North India Central Processing Hub');
@@ -310,7 +370,25 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
       setContactPerson('Vikram Malhotra (Head of Procurement)');
       setEnteredOtp('1234');
       setOtpSent(true);
-      showToast('Autofilled default single-entity Company credentials (FreshAgro Foods)', 'info');
+      showToast('Autofilled Buyer credentials (FreshAgro Foods)', 'info');
+    } else if (role === 'agent') {
+      setAgentPhone('+91 98765 22104');
+      setAgentPassword('agent123');
+      setEnteredOtp('1234');
+      setOtpSent(true);
+      showToast('Autofilled Field Officer credentials (Arun Khot)', 'info');
+    } else if (role === 'logistics') {
+      setLogisticsPhone('+91 98450 11223');
+      setLogisticsPassword('fleet123');
+      setEnteredOtp('1234');
+      setOtpSent(true);
+      showToast('Autofilled Logistics credentials (North India Freight)', 'info');
+    } else {
+      setAdminPhone('+91 99999 00000');
+      setAdminPassword('admin9999');
+      setEnteredOtp('1234');
+      setOtpSent(true);
+      showToast('Autofilled Admin Master Key (admin9999)', 'info');
     }
   };
 
@@ -411,33 +489,59 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
             </p>
           </div>
 
-          {/* Role Selection Tabs (Farmer vs Company) */}
+          {/* Role Selection Tabs (Farmer vs Company vs Agent vs Logistics) */}
           {mode !== 'forgot_password' && (
-            <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-1.5 rounded-2xl bg-slate-950 border border-slate-800 mb-6">
               <button
                 type="button"
                 onClick={() => setRole('farmer')}
-                className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                className={`py-3 px-2 rounded-xl text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-2 transition-all cursor-pointer ${
                   role === 'farmer'
                     ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-950/60 ring-2 ring-emerald-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
-                <Sprout className="w-5 h-5" />
-                <span>🌾 Farmer Account</span>
+                <Sprout className="w-4 h-4 text-emerald-400" />
+                <span>🌾 Farmer</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRole('company')}
-                className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                className={`py-3 px-2 rounded-xl text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-2 transition-all cursor-pointer ${
                   role === 'company'
                     ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-950/60 ring-2 ring-blue-500/50'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
-                <Building2 className="w-5 h-5" />
-                <span>🏢 Industrial Company</span>
+                <Building2 className="w-4 h-4 text-blue-400" />
+                <span>🏢 Buyer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole('agent')}
+                className={`py-3 px-2 rounded-xl text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-2 transition-all cursor-pointer ${
+                  role === 'agent'
+                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg shadow-teal-950/60 ring-2 ring-teal-500/50'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <UserCheck className="w-4 h-4 text-teal-400" />
+                <span>👨‍🌾 Middleman</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole('logistics')}
+                className={`py-3 px-2 rounded-xl text-xs font-extrabold flex flex-col sm:flex-row items-center justify-center gap-2 transition-all cursor-pointer ${
+                  role === 'logistics'
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-950/60 ring-2 ring-purple-500/50'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Truck className="w-4 h-4 text-purple-400" />
+                <span>🚚 Logistics</span>
               </button>
             </div>
           )}
@@ -493,7 +597,17 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
           {/* 1. LOGIN MODE (Phone / OTP / Password)                  */}
           {/* ======================================================== */}
           {mode === 'login' && (
-            <form onSubmit={role === 'farmer' ? handleFarmerLogin : handleCompanyLogin} className="space-y-4 text-xs sm:text-sm">
+            <form onSubmit={
+              role === 'farmer'
+                ? handleFarmerLogin
+                : role === 'company'
+                ? handleCompanyLogin
+                : role === 'agent'
+                ? handleAgentLogin
+                : role === 'logistics'
+                ? handleLogisticsLogin
+                : handleAdminLogin
+            } className="space-y-4 text-xs sm:text-sm">
               
               {/* Auth Method Switcher (OTP vs Password) */}
               <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
@@ -524,13 +638,43 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
               <div>
                 <label className="block font-bold text-slate-300 mb-1 flex items-center gap-1.5">
                   <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                  {role === 'farmer' ? 'Farmer Registered Phone Number' : 'Company Official Phone Number / Email'}
+                  {role === 'farmer' && 'Farmer Registered Phone Number'}
+                  {role === 'company' && 'Company Official Phone Number / Email'}
+                  {role === 'agent' && 'Field Agent Registered Phone Number'}
+                  {role === 'logistics' && 'Fleet Manager Registered Phone'}
+                  {role === 'admin' && 'Admin Account Identifier'}
                 </label>
                 <input
                   type="text"
-                  value={role === 'farmer' ? farmerPhone : companyPhone}
-                  onChange={(e) => role === 'farmer' ? setFarmerPhone(e.target.value) : setCompanyPhone(e.target.value)}
-                  placeholder={role === 'farmer' ? '+91 98765 43210' : '+91 98112 34567'}
+                  value={
+                    role === 'farmer'
+                      ? farmerPhone
+                      : role === 'company'
+                      ? companyPhone
+                      : role === 'agent'
+                      ? agentPhone
+                      : role === 'logistics'
+                      ? logisticsPhone
+                      : adminPhone
+                  }
+                  onChange={(e) => {
+                    if (role === 'farmer') setFarmerPhone(e.target.value);
+                    else if (role === 'company') setCompanyPhone(e.target.value);
+                    else if (role === 'agent') setAgentPhone(e.target.value);
+                    else if (role === 'logistics') setLogisticsPhone(e.target.value);
+                    else setAdminPhone(e.target.value);
+                  }}
+                  placeholder={
+                    role === 'farmer'
+                      ? '+91 98765 43210'
+                      : role === 'company'
+                      ? '+91 98112 34567'
+                      : role === 'agent'
+                      ? '+91 98765 22104'
+                      : role === 'logistics'
+                      ? '+91 98450 11223'
+                      : '+91 99999 00000'
+                  }
                   className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white font-bold focus:ring-2 focus:ring-emerald-500"
                   required
                 />
@@ -542,7 +686,7 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
                   <div className="flex items-center justify-between mb-1">
                     <label className="font-bold text-slate-300 flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                      Account Password
+                      {role === 'admin' ? 'Master Admin Passkey' : 'Account Password'}
                     </label>
                     <button
                       type="button"
@@ -554,8 +698,25 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
                   </div>
                   <input
                     type="password"
-                    value={role === 'farmer' ? farmerPassword : companyPassword}
-                    onChange={(e) => role === 'farmer' ? setFarmerPassword(e.target.value) : setCompanyPassword(e.target.value)}
+                    value={
+                      role === 'farmer'
+                        ? farmerPassword
+                        : role === 'company'
+                        ? companyPassword
+                        : role === 'agent'
+                        ? agentPassword
+                        : role === 'logistics'
+                        ? logisticsPassword
+                        : adminPassword
+                    }
+                    onChange={(e) => {
+                      if (role === 'farmer') setFarmerPassword(e.target.value);
+                      else if (role === 'company') setCompanyPassword(e.target.value);
+                      else if (role === 'agent') setAgentPassword(e.target.value);
+                      else if (role === 'logistics') setLogisticsPassword(e.target.value);
+                      else setAdminPassword(e.target.value);
+                    }}
+                    placeholder={role === 'admin' ? 'Enter admin passkey (e.g. admin9999)' : 'Enter password'}
                     className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-white font-bold focus:ring-2 focus:ring-emerald-500"
                     required
                   />
@@ -571,7 +732,20 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
                       {otpSent && (
                         <button
                           type="button"
-                          onClick={() => handleSendOtp(role === 'farmer' ? farmerPhone : companyPhone, 'phone')}
+                          onClick={() =>
+                            handleSendOtp(
+                              role === 'farmer'
+                                ? farmerPhone
+                                : role === 'company'
+                                ? companyPhone
+                                : role === 'agent'
+                                ? agentPhone
+                                : role === 'logistics'
+                                ? logisticsPhone
+                                : adminPhone,
+                              'phone'
+                            )
+                          }
                           className="text-[11px] text-amber-400 hover:underline cursor-pointer"
                         >
                           Resend OTP
@@ -591,7 +765,20 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
                       {!otpSent && (
                         <button
                           type="button"
-                          onClick={() => handleSendOtp(role === 'farmer' ? farmerPhone : companyPhone, 'phone')}
+                          onClick={() =>
+                            handleSendOtp(
+                              role === 'farmer'
+                                ? farmerPhone
+                                : role === 'company'
+                                ? companyPhone
+                                : role === 'agent'
+                                ? agentPhone
+                                : role === 'logistics'
+                                ? logisticsPhone
+                                : adminPhone,
+                              'phone'
+                            )
+                          }
                           className="px-4 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs shrink-0 cursor-pointer"
                         >
                           Send OTP
@@ -608,10 +795,24 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
                 className={`w-full py-3.5 px-6 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all hover:scale-101 ${
                   role === 'farmer'
                     ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-emerald-950'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-blue-950'
+                    : role === 'company'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-blue-950'
+                    : role === 'agent'
+                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white shadow-teal-950'
+                    : role === 'logistics'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-indigo-950'
+                    : 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-amber-950'
                 }`}
               >
-                <span>Login to {role === 'farmer' ? 'Farmer Application' : 'Industrial Company Portal'}</span>
+                <span>
+                  Login to {
+                    role === 'farmer' ? '🌾 Farmer Application' :
+                    role === 'company' ? '🏢 Industrial Buyer Portal' :
+                    role === 'agent' ? '👨‍🌾 Field Agent / Middleman Desk' :
+                    role === 'logistics' ? '🚚 Freight Logistics Portal' :
+                    '👑 Platform Operations Command Center'
+                  }
+                </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -1016,6 +1217,23 @@ export const AuthPortal: React.FC<AuthPortalProps> = ({ onLoginSuccess }) => {
               </div>
             </div>
           )}
+
+          {/* Discreet Admin Gateway Access Trigger */}
+          <div className="mt-8 pt-4 border-t border-slate-800/80 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setRole('admin');
+                setMode('login');
+                setAuthMethod('password');
+                showToast('Executive Admin Access Mode Activated (Passkey: admin9999)', 'info');
+              }}
+              className="text-[11px] font-semibold text-slate-500 hover:text-amber-400 inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500/70" />
+              <span>Platform Operations & Executive Admin Gateway →</span>
+            </button>
+          </div>
 
         </div>
       </main>
